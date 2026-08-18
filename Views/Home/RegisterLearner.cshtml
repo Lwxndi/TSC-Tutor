@@ -1,0 +1,222 @@
+@model Tutor_Manager.ViewModels.RegisterLearnerViewModel
+@using Tutor_Manager.Models
+
+@{
+    ViewData["Title"] = "Register - Learner";
+    Layout = null; // Standalone auth page
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Register as a Learner - The Science Community</title>
+
+    <!-- External CSS -->
+    <link rel="stylesheet" href="~/css/auth-register.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+</head>
+<body>
+
+    <!-- Particle Background -->
+    <canvas id="molecule-canvas"></canvas>
+
+    <div class="auth-page">
+        <div class="auth-card">
+
+            <div class="card-header-flex">
+                <div class="auth-title">Create account</div>
+                <div class="step-indicator" id="stepIndicator">Step 1 / 2</div>
+            </div>
+
+            <div class="auth-subtitle" id="stepSubtitle">Tell us about yourself</div>
+
+            <!-- Progress Bar -->
+            <div class="step-progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+
+            <!-- Role Tabs (Visual Selector matching screenshot) -->
+            <div class="role-selector">
+                <button type="button" class="role-btn active">
+                    <i class="bi bi-mortarboard-fill" style="font-size: 1.2rem;"></i> Student
+                </button>
+                <button type="button" class="role-btn" onclick="window.location.href='/Home/RegisterParent'">
+                    <i class="bi bi-person-fill" style="font-size: 1.2rem;"></i> Parent
+                </button>
+                <button type="button" class="role-btn" onclick="window.location.href='/Home/RegisterTutor'">
+                    <i class="bi bi-journal-bookmark-fill" style="font-size: 1.2rem;"></i> Tutor
+                </button>
+            </div>
+
+            <form asp-controller="Home" asp-action="RegisterLearner" method="post" id="registerForm" novalidate>
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-2"></div>
+
+                <!-- STEP 1: Personal & Account Details -->
+                <div id="step1">
+                    <div class="auth-row">
+                        <div class="auth-field">
+                            <label asp-for="FirstName">First name</label>
+                            <input asp-for="FirstName" type="text" placeholder="e.g. Lerato" autocomplete="given-name" />
+                            <span asp-validation-for="FirstName" class="text-danger"></span>
+                        </div>
+                        <div class="auth-field">
+                            <label asp-for="LastName">Last name</label>
+                            <input asp-for="LastName" type="text" placeholder="e.g. Dlamini" autocomplete="family-name" />
+                            <span asp-validation-for="LastName" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="auth-field">
+                        <label asp-for="Email">Email address</label>
+                        <input asp-for="Email" type="email" placeholder="lerato@example.com" autocomplete="email" />
+                        <span asp-validation-for="Email" class="text-danger"></span>
+                    </div>
+
+                    <div class="auth-row">
+                        <div class="auth-field">
+                            <label asp-for="PhoneNumber">Phone number</label>
+                            <input asp-for="PhoneNumber" type="tel" placeholder="+27 71 234 5678" autocomplete="tel" />
+                            <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+                        </div>
+                        <div class="auth-field">
+                            <label asp-for="AltPhoneNumber">Alt. phone <span style="font-weight:400;">(optional)</span></label>
+                            <input asp-for="AltPhoneNumber" type="tel" autocomplete="tel" />
+                            <span asp-validation-for="AltPhoneNumber" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="auth-row">
+                        <div class="auth-field">
+                            <label asp-for="Gender">Gender <span style="font-weight:400;">(optional)</span></label>
+                            <select asp-for="Gender" asp-items="Html.GetEnumSelectList<Gender>()">
+                                <option value="">-- Prefer not to say --</option>
+                            </select>
+                            <span asp-validation-for="Gender" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="section-divider">Account security</div>
+
+                    <div class="auth-row">
+                        <div class="auth-field">
+                            <label asp-for="Password">Password</label>
+                            <input asp-for="Password" autocomplete="new-password" />
+                            <span asp-validation-for="Password" class="text-danger"></span>
+                        </div>
+                        <div class="auth-field">
+                            <label asp-for="ConfirmPassword">Confirm password</label>
+                            <input asp-for="ConfirmPassword" autocomplete="new-password" />
+                            <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <span class="field-hint" style="margin-top: -10px; margin-bottom: 15px;">
+                        At least 8 characters, with an uppercase, lowercase, number, and special character.
+                    </span>
+
+                    <button type="button" class="btn-auth" onclick="goToStep(2)">
+                        Continue &rarr;
+                    </button>
+                </div>
+
+                <!-- STEP 2: Academic & Guardian Details -->
+                <div id="step2" style="display: none;">
+                    <div class="section-divider" style="margin-top: 0;">Academic details</div>
+
+                    <div class="auth-row">
+                        <div class="auth-field">
+                            <label asp-for="GradeLevel">Grade</label>
+                            <select asp-for="GradeLevel" asp-items="Html.GetEnumSelectList<Grade>()">
+                                <option value="">-- Select grade --</option>
+                            </select>
+                            <span asp-validation-for="GradeLevel" class="text-danger"></span>
+                        </div>
+                        <div class="auth-field">
+                            <label asp-for="SchoolName">School name <span style="font-weight:400;">(optional)</span></label>
+                            <input asp-for="SchoolName" type="text" />
+                            <span asp-validation-for="SchoolName" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="auth-field">
+                        <label>Subjects you need tutoring in</label>
+                        <div class="subject-grid">
+                            @for (int i = 0; i < Model.AvailableSubjects.Count; i++)
+                            {
+                                <div class="subject-check">
+                                    <input type="hidden" asp-for="AvailableSubjects[i].SubjectId" />
+                                    <input type="hidden" asp-for="AvailableSubjects[i].SubjectName" />
+                                    <input type="checkbox" asp-for="AvailableSubjects[i].IsSelected" id="subject_@i" />
+                                    <label for="subject_@i" style="margin: 0; cursor: pointer;">@Model.AvailableSubjects[i].SubjectName</label>
+                                </div>
+                            }
+                        </div>
+                        <span asp-validation-for="AvailableSubjects" class="text-danger"></span>
+                    </div>
+
+                    <div class="section-divider">Guardian details</div>
+
+                    <div class="auth-field">
+                        <label asp-for="GuardianPhoneNumber1">Guardian/Parent's phone number</label>
+                        <input asp-for="GuardianPhoneNumber1" type="tel" placeholder="e.g. 083 123 4567" />
+                        <span class="field-hint">We'll contact them by phone or WhatsApp to link your account.</span>
+                        <span asp-validation-for="GuardianPhoneNumber1" class="text-danger"></span>
+                    </div>
+
+                    <div class="auth-row">
+                        <div class="auth-field">
+                            <label asp-for="GuardianPhoneNumber2">2nd guardian's number <span style="font-weight:400;">(optional)</span></label>
+                            <input asp-for="GuardianPhoneNumber2" type="tel" />
+                            <span asp-validation-for="GuardianPhoneNumber2" class="text-danger"></span>
+                        </div>
+                        <div class="auth-field">
+                            <label asp-for="GuardianRelationship">Relationship <span style="font-weight:400;">(optional)</span></label>
+                            <input asp-for="GuardianRelationship" type="text" placeholder="e.g. Mother, Father" />
+                            <span asp-validation-for="GuardianRelationship" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="button-group">
+                        <button type="button" class="btn-secondary" onclick="goToStep(1)">&larr; Back</button>
+                        <button type="submit" class="btn-auth">Create Account</button>
+                    </div>
+                </div>
+
+            </form>
+
+            <div class="auth-footer-link">
+                Already have an account? <a asp-controller="Home" asp-action="Login">Log in</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- External JavaScript Files -->
+    <script src="~/js/molecules.js"></script>
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+            function goToStep(step) {
+                const step1 = document.getElementById('step1');
+                const step2 = document.getElementById('step2');
+                const stepIndicator = document.getElementById('stepIndicator');
+                const stepSubtitle = document.getElementById('stepSubtitle');
+                const progressFill = document.getElementById('progressFill');
+
+                if (step === 2) {
+                    step1.style.display = 'none';
+                    step2.style.display = 'block';
+                    stepIndicator.textContent = 'Step 2 / 2';
+                    stepSubtitle.textContent = 'Academic & Guardian Information';
+                    progressFill.style.width = '100%';
+                } else {
+                    step2.style.display = 'none';
+                    step1.style.display = 'block';
+                    stepIndicator.textContent = 'Step 1 / 2';
+                    stepSubtitle.textContent = 'Tell us about yourself';
+                    progressFill.style.width = '50%';
+                }
+            }
+    </script>
+</body>
+</html>

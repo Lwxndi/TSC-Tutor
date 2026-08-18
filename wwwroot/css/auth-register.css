@@ -1,0 +1,283 @@
+﻿* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+body, html {
+    width: 100%;
+    height: 100%;
+    overflow-x: hidden;
+    background-color: #0f2744;
+}
+
+/* --- CANVAS BACKGROUND --- */
+#molecule-canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    pointer-events: none;
+}
+
+/* --- MAIN CONTAINER --- */
+.auth-page {
+    position: relative;
+    z-index: 1;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 1rem;
+}
+
+/* --- REGISTRATION CARD --- */
+.auth-card {
+    background: #ffffff;
+    width: 100%;
+    max-width: 580px;
+    padding: 2.5rem;
+    border-radius: 20px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+}
+
+.card-header-flex {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 0.25rem;
+}
+
+.auth-title {
+    font-size: 1.85rem;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.step-indicator {
+    font-size: 0.85rem;
+    color: #64748b;
+    font-weight: 600;
+}
+
+.auth-subtitle {
+    font-size: 0.95rem;
+    color: #64748b;
+    margin-bottom: 1.25rem;
+}
+
+/* Progress Line */
+.step-progress-bar {
+    width: 100%;
+    height: 3px;
+    background: #e2e8f0;
+    border-radius: 2px;
+    margin-bottom: 1.5rem;
+    overflow: hidden;
+}
+
+.progress-fill {
+    width: 50%;
+    height: 100%;
+    background-color: #1b365d;
+    transition: width 0.3s ease;
+}
+
+/* Role Selector Tabs */
+.role-selector {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 1.5rem;
+}
+
+.role-btn {
+    border: 1px solid #e2e8f0;
+    background: #ffffff;
+    padding: 12px 0;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #64748b;
+    border-radius: 12px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s ease;
+}
+
+    .role-btn.active {
+        background: #1b365d;
+        color: #ffffff;
+        border-color: #1b365d;
+        box-shadow: 0 4px 12px rgba(27, 54, 93, 0.2);
+    }
+
+/* Form Controls */
+.auth-row {
+    display: flex;
+    gap: 12px;
+}
+
+    .auth-row .auth-field {
+        flex: 1;
+    }
+
+.auth-field {
+    margin-bottom: 1.25rem;
+}
+
+    .auth-field label {
+        display: block;
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: #334155;
+        margin-bottom: 0.4rem;
+    }
+
+    .auth-field input[type="text"],
+    .auth-field input[type="email"],
+    .auth-field input[type="tel"],
+    .auth-field input[type="password"],
+    .auth-field select {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border: 1px solid #cbd5e1;
+        border-radius: 8px;
+        font-size: 0.95rem;
+        outline: none;
+        background-color: #ffffff;
+        color: #0f172a;
+        transition: border-color 0.2s ease;
+    }
+
+        .auth-field input:focus,
+        .auth-field select:focus {
+            border-color: #1b365d;
+            box-shadow: 0 0 0 3px rgba(27, 54, 93, 0.1);
+        }
+
+.field-hint {
+    font-size: 0.78rem;
+    color: #64748b;
+    margin-top: 4px;
+    display: block;
+}
+
+.section-divider {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 1.25rem 0 0.75rem 0;
+    padding-bottom: 0.25rem;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+/* Subject Grid Checkboxes */
+.subject-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 10px;
+    margin-top: 6px;
+}
+
+.subject-check {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    color: #334155;
+}
+
+    .subject-check input[type="checkbox"] {
+        accent-color: #1b365d;
+        width: 16px;
+        height: 16px;
+    }
+
+/* Button Controls */
+.btn-auth {
+    width: 100%;
+    background-color: #1b365d;
+    color: #ffffff;
+    border: none;
+    padding: 0.85rem;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+}
+
+    .btn-auth:hover {
+        background-color: #122542;
+    }
+
+.btn-secondary {
+    background-color: #e2e8f0;
+    color: #334155;
+    border: none;
+    padding: 0.85rem 1.25rem;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+    .btn-secondary:hover {
+        background-color: #cbd5e1;
+    }
+
+.button-group {
+    display: flex;
+    gap: 12px;
+    margin-top: 1rem;
+}
+
+.auth-footer-link {
+    margin-top: 1.5rem;
+    font-size: 0.9rem;
+    color: #64748b;
+    text-align: center;
+}
+
+    .auth-footer-link a {
+        color: #1b365d;
+        font-weight: 600;
+        text-decoration: none;
+    }
+
+        .auth-footer-link a:hover {
+            text-decoration: underline;
+        }
+
+.text-danger {
+    color: #dc2626;
+    font-size: 0.8rem;
+    margin-top: 4px;
+    display: block;
+}
+
+/* Responsive */
+@media (max-width: 540px) {
+    .auth-row {
+        flex-direction: column;
+        gap: 0;
+    }
+
+    .auth-card {
+        padding: 1.5rem;
+    }
+}

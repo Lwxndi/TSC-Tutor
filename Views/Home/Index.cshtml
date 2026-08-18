@@ -1,0 +1,263 @@
+﻿@* @{
+    ViewData["Title"] = "Home Page";
+}
+
+<div class="text-center">
+    <h1 class="display-4">Welcome</h1>
+    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+</div> *@
+@{
+    ViewData["Title"] = "The Science Community - Tutoring Platform";
+}
+
+<link rel="stylesheet" href="~/css/home-landing.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+
+<!-- Stats Banner -->
+<section class="stats-banner">
+    <div class="stats-container">
+        <div class="stat-item">
+            <div class="stat-number">500+</div>
+            <div class="stat-label">Students tutored</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-number">95%</div>
+            <div class="stat-label">Pass rate</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-number">6</div>
+            <div class="stat-label">Subjects offered</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-number">2</div>
+            <div class="stat-label">Cities & counting</div>
+        </div>
+    </div>
+</section>
+
+<!-- About Section -->
+<section class="section-padding">
+    <div class="about-grid">
+        <div>
+            <div class="badge-pill">&bull; ABOUT US</div>
+            <h1 class="section-title">Built on a passion for teaching science.</h1>
+            <p style="color: #475569; margin-bottom: 1rem;">
+                The Science Community was founded by <strong>Michael Vilankulu</strong> in Mbombela with a simple belief: that every student deserves access to quality science education, regardless of where they live.
+            </p>
+            <p style="color: #475569;">
+                What started as group sessions in a single room has grown into a hybrid learning platform serving students from Mbombela to Cape Town — and beyond.
+            </p>
+            <div class="about-tags">
+                <span class="tag-btn">Group learning</span>
+                <span class="tag-btn">Hybrid sessions</span>
+                <span class="tag-btn">Expert tutors</span>
+                <span class="tag-btn">Proven results</span>
+            </div>
+        </div>
+        <div class="about-image-wrapper">
+            <img src="https://images.unsplash.com/photo-1532094349884-543bc11b234d?auto=format&fit=crop&q=80&w=800" alt="Students learning" class="about-image" />
+            <div class="floating-location-card">
+                <div class="location-icon"><i class="bi bi-geo-alt-fill"></i></div>
+                <div>
+                    <strong style="font-size:0.9rem; display:block;">Cape Town & Mbombela</strong>
+                    <span style="font-size:0.75rem; color:#64748b;">In-person + online nationwide</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- How We Operate Section -->
+<section class="section-padding" style="background:#fafafa; text-align:center;">
+    <div class="badge-pill" style="margin:0 auto 1rem auto;">&bull; HOW WE OPERATE</div>
+    <h2 class="section-title">Simple, structured, effective.</h2>
+    <p class="section-subtitle" style="margin: 0 auto;">From sign-up to exam day, every step is designed to support students and give parents full visibility.</p>
+
+    <div class="steps-grid" style="text-align:left;">
+        <div class="step-card">
+            <div class="step-number">1</div>
+            <h3>Register your account</h3>
+            <p>Sign up as a student, parent, or tutor. Takes less than two minutes. Choose online, in-person, or hybrid sessions.</p>
+        </div>
+        <div class="step-card">
+            <div class="step-number">2</div>
+            <h3>Join a group session</h3>
+            <p>Browse scheduled classes by subject and grade. Group-based models keep costs low and learning social.</p>
+        </div>
+        <div class="step-card">
+            <div class="step-number">3</div>
+            <h3>Access resources anytime</h3>
+            <p>Notes, past papers, and recorded lessons live in your digital library — available 24/7 from any device.</p>
+        </div>
+        <div class="step-card">
+            <div class="step-number">4</div>
+            <h3>Track your progress</h3>
+            <p>Parents and students get real-time dashboards showing attendance, homework, and assessment results.</p>
+        </div>
+    </div>
+</section>
+
+<!-- Curriculum Banner -->
+<div class="subjects-banner">
+    <div>
+        <span style="font-size:0.75rem; text-transform:uppercase; letter-spacing:1px; color:#cbd5e1;">SUBJECTS WE TEACH</span>
+        <h3 style="font-size:1.5rem; font-weight:800; margin-top:4px;">Grade 8 – 12 Curriculum</h3>
+    </div>
+    <div class="subject-pills">
+        <span class="subject-pill">Mathematics</span>
+        <span class="subject-pill">Physical Sciences</span>
+        <span class="subject-pill">Life Sciences</span>
+        <span class="subject-pill">Accounting</span>
+        <span class="subject-pill">Geography</span>
+        <span class="subject-pill">English</span>
+    </div>
+</div>
+
+<!-- Tutors Section -->
+<section class="section-padding">
+    <div class="tutors-header">
+        <div>
+            <div class="badge-pill">&bull; OUR TUTORS</div>
+            <h2 class="section-title" style="margin:0;">Experts who care.</h2>
+        </div>
+        <a href="#" class="btn-outline">Apply as a tutor &rarr;</a>
+    </div>
+
+    <div class="tutors-grid">
+        <div class="tutor-card">
+            <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=400" class="tutor-img" alt="Michael Vilankulu" />
+            <div class="tutor-info">
+                <h4>Michael Vilankulu</h4>
+                <div class="tutor-role">Founder & Lead Tutor</div>
+                <span class="tutor-subjects">Mathematics &bull; Physical Sciences</span>
+            </div>
+        </div>
+        <div class="tutor-card">
+            <img src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=400" class="tutor-img" alt="Amara Osei" />
+            <div class="tutor-info">
+                <h4>Amara Osei</h4>
+                <div class="tutor-role">Senior Tutor</div>
+                <span class="tutor-subjects">Life Sciences &bull; Accounting</span>
+            </div>
+        </div>
+        <div class="tutor-card">
+            <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=400" class="tutor-img" alt="Sipho Ndlovu" />
+            <div class="tutor-info">
+                <h4>Sipho Ndlovu</h4>
+                <div class="tutor-role">Mathematics Tutor</div>
+                <span class="tutor-subjects">Mathematics &bull; Geography</span>
+            </div>
+        </div>
+        <div class="tutor-card" style="background:#f8fafc; display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; padding:20px;">
+            <div style="background:#10b981; color:#fff; font-size:0.7rem; padding:2px 8px; border-radius:10px; font-weight:700; margin-bottom:10px;">Hiring</div>
+            <h4>Join the team</h4>
+            <p style="font-size:0.8rem; color:#64748b; margin-bottom:12px;">Tutor applications open</p>
+            <span class="tutor-subjects">All subjects considered</span>
+        </div>
+    </div>
+</section>
+
+<!-- Testimonials Section -->
+<section class="testimonials-section">
+    <div class="badge-pill" style="margin:0 auto 1rem auto;">&bull; TESTIMONIALS</div>
+    <h2 class="section-title">Stories from our community.</h2>
+
+    <div class="testimonial-card">
+        <p class="quote-text" id="testimonialQuote">"Before The Science Community, I was failing Maths. After just one term with Michael, I got 78%. The group sessions made everything click — you learn from your peers too, not just the tutor."</p>
+        <div class="author-flex">
+            <div class="avatar-circle" id="testimonialAvatar">LD</div>
+            <div>
+                <strong id="testimonialAuthor" style="display:block;">Lerato Dlamini</strong>
+                <span id="testimonialRole" style="font-size:0.8rem; color:#cbd5e1;">Grade 11 Student, Mbombela</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="testimonial-nav">
+        <button type="button" class="testimonial-tab active" data-key="lerato">Lerato Dlamini</button>
+        <button type="button" class="testimonial-tab" data-key="grace">Grace Mokoena</button>
+        <button type="button" class="testimonial-tab" data-key="sipho">Sipho Khumalo</button>
+        <button type="button" class="testimonial-tab" data-key="ayanda">Ayanda Nkosi</button>
+    </div>
+</section>
+
+<!-- Contact Section -->
+<section class="section-padding">
+    <div class="contact-grid">
+        <div>
+            <div class="badge-pill">&bull; CONTACT US</div>
+            <h2 class="section-title">Let's get you started.</h2>
+            <p style="color:#64748b; margin-bottom:2rem;">Have a question about our sessions, pricing, or how to enrol? Reach out — we respond within 24 hours.</p>
+
+            <div class="contact-item">
+                <div class="contact-icon"><i class="bi bi-geo-alt"></i></div>
+                <div>
+                    <span style="font-size:0.7rem; color:#94a3b8; font-weight:700; display:block;">LOCATIONS</span>
+                    <strong>Cape Town &bull; Mbombela &bull; Online</strong>
+                </div>
+            </div>
+            <div class="contact-item">
+                <div class="contact-icon"><i class="bi bi-envelope"></i></div>
+                <div>
+                    <span style="font-size:0.7rem; color:#94a3b8; font-weight:700; display:block;">EMAIL</span>
+                    <strong>hello@sciencecommunity.co.za</strong>
+                </div>
+            </div>
+            <div class="contact-item">
+                <div class="contact-icon"><i class="bi bi-whatsapp"></i></div>
+                <div>
+                    <span style="font-size:0.7rem; color:#94a3b8; font-weight:700; display:block;">WHATSAPP</span>
+                    <strong>+27 71 000 0000</strong>
+                </div>
+            </div>
+        </div>
+
+        <div class="contact-form">
+            <form id="homeContactForm">
+                <label style="font-size:0.85rem; font-weight:600; display:block; margin-bottom:4px;">Your name</label>
+                <input type="text" placeholder="e.g. Lerato Dlamini" required />
+
+                <label style="font-size:0.85rem; font-weight:600; display:block; margin-bottom:4px;">Email address</label>
+                <input type="email" placeholder="lerato@example.com" required />
+
+                <label style="font-size:0.85rem; font-weight:600; display:block; margin-bottom:4px;">Message</label>
+                <textarea rows="4" placeholder="Tell us what you need help with..." required></textarea>
+
+                <button type="submit" class="btn-submit">Send message</button>
+            </form>
+        </div>
+    </div>
+</section>
+
+<!-- Footer -->
+<footer class="site-footer">
+    <div class="footer-grid">
+        <div>
+            <h4 style="color:#fff; margin-bottom:0.75rem;">The Science Community</h4>
+            <p style="font-size:0.85rem; max-width:320px;">Empowering South African students through expert, accessible science tutoring — in-person and online.</p>
+        </div>
+        <div>
+            <h5>PLATFORM</h5>
+            <ul class="footer-links">
+                <li><a href="#">About Us</a></li>
+                <li><a href="#">Our Tutors</a></li>
+                <li><a href="#">How We Operate</a></li>
+                <li><a href="#">Testimonials</a></li>
+                <li><a href="#">Contact Us</a></li>
+            </ul>
+        </div>
+        <div>
+            <h5>ACCOUNT</h5>
+            <ul class="footer-links">
+                <li><a asp-controller="Home" asp-action="Login">Sign in</a></li>
+                <li><a asp-controller="Home" asp-action="RegisterLearner">Create account</a></li>
+            </ul>
+        </div>
+    </div>
+    <div class="footer-bottom">
+        <div>&copy; 2026 The Science Community. All rights reserved.</div>
+        <div>Cape Town &bull; Mbombela &bull; Online</div>
+    </div>
+</footer>
+
+<script src="~/js/testimonials.js"></script>
