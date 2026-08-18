@@ -148,6 +148,10 @@ namespace Tutor_Manager.Controllers
                 isFirstGuardian = false;
             }
 
+            var year = DateTime.Now.Year;
+            var nextNumber = _context.Learners.Count() + 1;
+            learner.TscNumber = $"TSC{year}{nextNumber:D4}"; // TSC20260001
+
             _context.Learners.Add(learner);
             await _context.SaveChangesAsync();
 
@@ -155,7 +159,68 @@ namespace Tutor_Manager.Controllers
             return RedirectToAction(nameof(Login));
         }
 
-        // GET: /Home/Login
+
+        [HttpGet]
+        public IActionResult RegisterGuardian()
+        {
+            return View(new RegisterGuardianViewModel());
+        }
+
+        //[HttpPost]
+        //public async Task<IActionResult> RegisterGuardian(RegisterGuardianViewModel model)
+        //{
+        //    if (!ModelState.IsValid)
+        //        return View(model);
+
+        //    if (await _context.Users.AnyAsync(u => u.Email == model.Email))
+        //    {
+        //        ModelState.AddModelError(nameof(model.Email), "An account with this email already exists.");
+        //        return View(model);
+        //    }
+
+        //    var user = new User
+        //    {
+        //        FirstName = model.Name,
+        //        LastName = model.Surname,
+        //        Email = model.Email,
+        //        PhoneNumber = model.PhoneNumber,
+        //        PasswordHash = string.Empty 
+        //    };
+        //    _context.Users.Add(user);
+        //    await _context.SaveChangesAsync(); // need UserId generated before linking below
+
+        //    var guardian = new Parent { UserId = user.UserId };
+        //    _context.Parents.Add(guardian);
+
+        //    _context.UserRoles.Add(new UserRole
+        //    {
+        //        UserId = user.UserId,
+        //        Role = "Guardian" // match however you're storing roles right now
+        //    });
+
+        //    var learner = await _context.Learners
+        //        .FirstOrDefaultAsync(l => l.TscNumber == model.LearnerTscNumber);
+
+        //    if (learner != null)
+        //    {
+        //        _context.LearnerGuardians.Add(new LearnerGuardian
+        //        {
+        //            LearnerId = learner.UserId,
+        //            GuardianId = guardian.UserId
+        //        });
+        //    }
+        //    // no match -> guardian account still gets created, just unlinked for now
+
+        //    await _context.SaveChangesAsync();
+
+        //    TempData["LinkStatus"] = learner != null
+        //        ? "Your account has been linked to your child's profile."
+        //        : "We couldn't find a learner with that TSC number. You can try linking again from your dashboard.";
+
+        //    return RedirectToAction("Login");
+        //}
+
+        // GET: /Home/Login for all users
         [HttpGet]
         public IActionResult Login()
         {

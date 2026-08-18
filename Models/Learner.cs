@@ -11,8 +11,8 @@ namespace Tutor_Manager.Models
         public int UserId { get; set; }
         public User User { get; set; } = null!;
 
-        // Enum instead of a raw number -> renders as a dropdown, and values
-        // outside 10-12 simply can't be entered - the enum IS the constraint.
+        public string TscNumber { get; set; } = null!; // e.g. TSC20260001, unique
+      
         public Grade? GradeLevel { get; set; }
 
         [StringLength(100)]

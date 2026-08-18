@@ -186,13 +186,7 @@ public class LearnersController : Controller
         return View(learner);
     }
 
-    // GET: LEARNERS/Create
-    // NOTE: real Learner sign-up happens through HomeController.RegisterLearner,
-    // which creates the User + Learner + Subjects + Guardians together. This
-    // Create action only makes sense for an ADMIN attaching a Learner profile
-    // to a User that already exists (e.g. fixing a bad registration) - it does
-    // not currently offer a way to pick which User, which you'd want to add
-    // (a dropdown of Users without an existing Learner profile) before using this.
+   
     public IActionResult Create()
     {
         return View();
