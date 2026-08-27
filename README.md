@@ -35,6 +35,7 @@ This platform connects tutors, learners, and parents/guardians in one place. Mic
 - ASP.NET Core MVC
 - SQL Server
 - Entity Framework Core
+- Razor Views with Bootstrap
 
 ## Status
 This project is under active development as part of an academic integrated project. Current focus: controllers and ViewModels for registration and login.
