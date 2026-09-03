@@ -1,0 +1,60 @@
+﻿@model Tutor_Manager.ViewModels.TutorApplication.AdminApplicationDecisionViewModel
+
+@{
+    ViewData["Title"] = "Application Decision";
+}
+
+<div class="container py-4" style="max-width: 600px;">
+    <h2 class="mb-4">Make a Decision</h2>
+
+    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+    <form asp-controller="AdminTutorApplication" asp-action="Decision" method="post">
+        <input type="hidden" asp-for="ApplicationId" />
+
+        <div class="mb-3">
+            <label class="form-label">Decision</label>
+            <div class="form-check">
+                <input type="radio" class="form-check-input" asp-for="Decision" value="Approve" id="decApprove" />
+                <label class="form-check-label text-success" for="decApprove">Approve</label>
+            </div>
+            <div class="form-check">
+                <input type="radio" class="form-check-input" asp-for="Decision" value="Reject" id="decReject" />
+                <label class="form-check-label text-danger" for="decReject">Reject</label>
+            </div>
+            <div class="form-check">
+                <input type="radio" class="form-check-input" asp-for="Decision" value="RequestChanges" id="decChanges" />
+                <label class="form-check-label text-info" for="decChanges">Request Changes</label>
+            </div>
+            <span asp-validation-for="Decision" class="text-danger small"></span>
+        </div>
+
+        <div class="mb-3" id="notesField">
+            <label asp-for="ChangesRequiredNotes" class="form-label">What needs to change?</label>
+            <textarea asp-for="ChangesRequiredNotes" class="form-control" rows="3"></textarea>
+            <span asp-validation-for="ChangesRequiredNotes" class="text-danger small"></span>
+        </div>
+
+        <div class="d-flex justify-content-between mt-4">
+            <a asp-action="Details" asp-route-id="@Model.ApplicationId" class="btn btn-outline-secondary">Cancel</a>
+            <button type="submit" class="btn btn-primary">Confirm Decision</button>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        const notesField = document.getElementById("notesField");
+        const radios = document.querySelectorAll('input[name="Decision"]');
+
+        function toggleNotes() {
+            const changesSelected = document.getElementById("decChanges").checked;
+            notesField.classList.toggle("d-none", !changesSelected);
+        }
+
+        radios.forEach(r => r.addEventListener("change", toggleNotes));
+        toggleNotes();
+    </script>
+}

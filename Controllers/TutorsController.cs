@@ -1,21 +1,57 @@
-
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 using Tutor_Manager.Models;
+using Tutor_Manager.Services.Email;
+using Tutor_Manager.ViewModels;
 
 public class TutorsController : Controller
 {
     private readonly Tutor_ManagerDatabaseContext _context;
+    private readonly IEmailService _emailService;
+    private readonly IEmailTemplateService _templates;
 
-    public TutorsController(Tutor_ManagerDatabaseContext context)
+    public TutorsController(Tutor_ManagerDatabaseContext context, IEmailService emailService, IEmailTemplateService templates)
     {
         _context = context;
+        _emailService = emailService;
+        _templates = templates;
     }
 
     // GET: TUTORS
     public async Task<IActionResult> Index()    
     {
         return View(await _context.Tutors.ToListAsync());
+    }
+
+
+    // GET: /Tutors/Dashboard
+    public async Task<IActionResult> Dashboard()
+    {
+        var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+
+        var tutor = await _context.Tutors
+            .Include(t => t.User)
+            .Include(t => t.SubjectsTaught)
+                .ThenInclude(ts => ts.Subject)
+            .FirstOrDefaultAsync(t => t.UserId == userId);
+
+        if (tutor == null)
+            return NotFound();
+
+        var model = new TutorDashboardViewModel
+        {
+            FirstName = tutor.User.FirstName,
+            TutorNumber = tutor.TutorNumber,
+            VettingStatus = tutor.VettingStatus,
+            AccountStatus = tutor.AccountStatus.ToString(),
+            Subjects = tutor.SubjectsTaught
+                .Select(ts => $"{ts.Subject.SubjectName} (Grade {ts.GradeLevel})")
+                .ToList(),
+            UpcomingSessions = new List<string>() // placeholder - wire up once sessions exist
+        };
+
+        return View(model);
     }
 
     // GET: TUTORS/Details/5

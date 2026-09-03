@@ -1,0 +1,71 @@
+﻿@model Tutor_Manager.ViewModels.TutorDashboardViewModel
+
+@{
+    ViewData["Title"] = "Tutor Dashboard";
+}
+
+<div class="container py-4">
+    <h2 class="mb-4">Welcome back, @Model.FirstName!</h2>
+
+    <div class="row g-4">
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-header"><strong>My Profile</strong></div>
+                <div class="card-body">
+                    <dl class="row mb-0">
+                        <dt class="col-sm-5">Tutor Number</dt>
+                        <dd class="col-sm-7">@(Model.TutorNumber ?? "—")</dd>
+
+                        <dt class="col-sm-5">Vetting Status</dt>
+                        <dd class="col-sm-7">@Model.VettingStatus</dd>
+
+                        <dt class="col-sm-5">Account Status</dt>
+                        <dd class="col-sm-7">@Model.AccountStatus</dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-header"><strong>Subjects I Teach</strong></div>
+                <div class="card-body">
+                    @if (!Model.Subjects.Any())
+                    {
+                        <p class="text-muted mb-0">No subjects assigned yet.</p>
+                    }
+                    else
+                    {
+                        <ul class="mb-0">
+                            @foreach (var subject in Model.Subjects)
+                            {
+                                <li>@subject</li>
+                            }
+                        </ul>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header"><strong>Upcoming Sessions</strong></div>
+                <div class="card-body">
+                    @if (!Model.UpcomingSessions.Any())
+                    {
+                        <p class="text-muted mb-0">Session scheduling isn't available yet — check back soon.</p>
+                    }
+                    else
+                    {
+                        <ul class="mb-0">
+                            @foreach (var session in Model.UpcomingSessions)
+                            {
+                                <li>@session</li>
+                            }
+                        </ul>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

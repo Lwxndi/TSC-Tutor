@@ -149,17 +149,25 @@
 //}
 
 
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 using Tutor_Manager.Models;
+using Tutor_Manager.Services.Email;
+using Tutor_Manager.ViewModels;
 
 public class LearnersController : Controller
 {
     private readonly Tutor_ManagerDatabaseContext _context;
+    private readonly IEmailService _emailService;
+    private readonly IEmailTemplateService _templates;
 
-    public LearnersController(Tutor_ManagerDatabaseContext context)
+    public LearnersController(Tutor_ManagerDatabaseContext context, IEmailService emailService, IEmailTemplateService templates)
     {
         _context = context;
+        _emailService = emailService;
+        _templates = templates;
     }
 
     // GET: LEARNERS
@@ -167,6 +175,46 @@ public class LearnersController : Controller
     {
         return View(await _context.Learners.ToListAsync());
     }
+
+    // GET: /Learners/Dashboard
+    [Authorize(Roles = "Learner")]
+    public async Task<IActionResult> Dashboard()
+    {
+        var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+
+        var learner = await _context.Learners
+            .Include(l => l.User)
+            .Include(l => l.Subjects)
+                .ThenInclude(ls => ls.Subject)
+            .Include(l => l.Guardians)
+                .ThenInclude(lg => lg.Parent)
+                    .ThenInclude(p => p.User)
+            .FirstOrDefaultAsync(l => l.UserId == userId);
+
+        if (learner == null)
+            return NotFound();
+
+        var model = new LearnerDashboardViewModel
+        {
+            FirstName = learner.User.FirstName,
+            TscNumber = learner.TscNumber,
+            GradeLevel = learner.GradeLevel.ToString(),
+            SchoolName = learner.SchoolName,
+            Subjects = learner.Subjects
+                .Select(ls => ls.Subject.SubjectName)
+                .ToList(),
+            Guardians = learner.Guardians.Select(lg => new GuardianSummary
+            {
+                FullName = $"{lg.Parent.User.FirstName} {lg.Parent.User.LastName}",
+                PhoneNumber = lg.Parent.User.PhoneNumber,
+                Relationship = lg.RelationshipToLearner
+            }).ToList(),
+            UpcomingSessions = new List<string>() // placeholder - wire up once sessions exist
+        };
+
+        return View(model);
+    }
+
 
     // GET: LEARNERS/Details/5
     public async Task<IActionResult> Details(int? userid)

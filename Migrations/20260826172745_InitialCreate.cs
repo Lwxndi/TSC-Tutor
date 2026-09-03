@@ -3,6 +3,8 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
+#pragma warning disable CA1814 // Prefer jagged arrays over multidimensional
+
 namespace Tutor_Manager.Migrations
 {
     /// <inheritdoc />
@@ -81,7 +83,8 @@ namespace Tutor_Manager.Migrations
                 columns: table => new
                 {
                     UserId = table.Column<int>(type: "int", nullable: false),
-                    GradeLevel = table.Column<byte>(type: "tinyint", nullable: true),
+                    TscNumber = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    GradeLevel = table.Column<int>(type: "int", nullable: true),
                     SchoolName = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true)
                 },
                 constraints: table =>
@@ -89,6 +92,30 @@ namespace Tutor_Manager.Migrations
                     table.PrimaryKey("PK_Learners", x => x.UserId);
                     table.ForeignKey(
                         name: "FK_Learners_Users_UserId",
+                        column: x => x.UserId,
+                        principalTable: "Users",
+                        principalColumn: "UserId",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Notifications",
+                columns: table => new
+                {
+                    NotificationId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    UserId = table.Column<int>(type: "int", nullable: false),
+                    Title = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    Message = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
+                    Link = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    IsRead = table.Column<bool>(type: "bit", nullable: false),
+                    DateCreated = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Notifications", x => x.NotificationId);
+                    table.ForeignKey(
+                        name: "FK_Notifications_Users_UserId",
                         column: x => x.UserId,
                         principalTable: "Users",
                         principalColumn: "UserId",
@@ -231,6 +258,44 @@ namespace Tutor_Manager.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
+            migrationBuilder.InsertData(
+                table: "Roles",
+                columns: new[] { "RoleId", "RoleName" },
+                values: new object[,]
+                {
+                    { 1, "Learner" },
+                    { 2, "Tutor" },
+                    { 3, "Parent" },
+                    { 4, "Admin" }
+                });
+
+            migrationBuilder.InsertData(
+                table: "Subjects",
+                columns: new[] { "SubjectId", "SubjectName" },
+                values: new object[,]
+                {
+                    { 1, "Mathematics" },
+                    { 2, "Physical Sciences" },
+                    { 3, "Life Sciences" },
+                    { 4, "English Home Language" },
+                    { 5, "Accounting" }
+                });
+
+            migrationBuilder.InsertData(
+                table: "Users",
+                columns: new[] { "UserId", "AltPhoneNumber", "DateCreated", "Email", "FirstName", "Gender", "IsActive", "LastName", "PasswordHash", "PhoneNumber" },
+                values: new object[] { 1, null, new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "lwandinhlengethwa25@gmail.com", "Admin", null, true, "AdminVila", "AQAAAAEAAYagAAAAEIvwxMAJ/t2/rwo6a30o39WIwMzC2nLntC98owiYso24zSx1fLtYAYjOcSRddprXUw==", "0000000000" });
+
+            migrationBuilder.InsertData(
+                table: "Administrators",
+                columns: new[] { "UserId", "Position" },
+                values: new object[] { 1, "Owner / Head Tutor" });
+
+            migrationBuilder.InsertData(
+                table: "UserRoles",
+                columns: new[] { "RoleId", "UserId" },
+                values: new object[] { 4, 1 });
+
             migrationBuilder.CreateIndex(
                 name: "IX_LearnerGuardians_ParentUserId",
                 table: "LearnerGuardians",
@@ -240,6 +305,11 @@ namespace Tutor_Manager.Migrations
                 name: "IX_LearnerSubjects_SubjectId",
                 table: "LearnerSubjects",
                 column: "SubjectId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Notifications_UserId",
+                table: "Notifications",
+                column: "UserId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_TutorSubjects_SubjectId",
@@ -263,6 +333,9 @@ namespace Tutor_Manager.Migrations
 
             migrationBuilder.DropTable(
                 name: "LearnerSubjects");
+
+            migrationBuilder.DropTable(
+                name: "Notifications");
 
             migrationBuilder.DropTable(
                 name: "TutorSubjects");

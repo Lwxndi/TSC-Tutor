@@ -1,0 +1,58 @@
+﻿@model Tutor_Manager.ViewModels.TutorApplication.TutorApplicationStrengthsViewModel
+
+@{
+    ViewData["Title"] = "Tutor Application — Strengths";
+
+    var strengthOptions = new[]
+    {
+        "Problem solving", "Exam preparation", "Explaining difficult concepts",
+        "Practical demonstrations", "One-on-one tutoring", "Group tutoring",
+        "Online tutoring", "CAPS curriculum knowledge", "Communication",
+        "Mentoring", "Working with struggling learners"
+    };
+}
+
+<div class="container py-4" style="max-width: 700px;">
+    <h2 class="mb-1">Your Strengths as a Tutor</h2>
+    <p class="text-muted mb-4">Select what applies, and tell us more in your own words.</p>
+
+    @await Html.PartialAsync("_StepProgress", (5, string.Empty))
+
+    <form asp-controller="TutorApplication" asp-action="Strengths" method="post">
+        <input type="hidden" asp-for="ApplicationId" />
+        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+        <div class="row g-2 mb-4">
+            @foreach (var strength in strengthOptions)
+            {
+                var checkboxId = "strength-" + strength.Replace(" ", "-");
+                var isChecked = Model.SelectedStrengths.Contains(strength);
+                <div class="col-md-6">
+                    <div class="form-check">
+                        <input type="checkbox" class="form-check-input"
+                               id="@checkboxId"
+                               name="SelectedStrengths"
+                               value="@strength"
+                               checked="@isChecked" />
+                        <label class="form-check-label" for="@checkboxId">@strength</label>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <div class="mb-4">
+            <label asp-for="StrengthsNote" class="form-label">Tell us about your strengths as a tutor (optional)</label>
+            <textarea asp-for="StrengthsNote" class="form-control" rows="4"></textarea>
+            <span asp-validation-for="StrengthsNote" class="text-danger small"></span>
+        </div>
+
+        <div class="d-flex justify-content-between mt-4">
+            <a asp-action="Experience" asp-route-id="@Model.ApplicationId" class="btn btn-outline-secondary">Back</a>
+            <button type="submit" class="btn btn-primary">Next: Documents</button>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

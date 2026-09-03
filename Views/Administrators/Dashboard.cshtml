@@ -1,0 +1,58 @@
+﻿@model Tutor_Manager.ViewModels.AdminDashboardViewModel
+
+@{
+    ViewData["Title"] = "Admin Dashboard";
+}
+
+<div class="container py-4">
+    <h2 class="mb-4">Welcome back, @Model.FirstName!</h2>
+
+    <div class="row g-4">
+        <div class="col-md-3 col-6">
+            <div class="card text-center h-100">
+                <div class="card-body">
+                    <h3 class="mb-0">@Model.PendingApplicationsCount</h3>
+                    <p class="text-muted mb-0 small">Pending Applications</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-6">
+            <div class="card text-center h-100">
+                <div class="card-body">
+                    <h3 class="mb-0">@Model.ChangesRequiredCount</h3>
+                    <p class="text-muted mb-0 small">Changes Required</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-6">
+            <div class="card text-center h-100">
+                <div class="card-body">
+                    <h3 class="mb-0">@Model.ApprovedTutorsCount</h3>
+                    <p class="text-muted mb-0 small">Tutors Approved</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-6">
+            <div class="card text-center h-100">
+                <div class="card-body">
+                    <h3 class="mb-0">@Model.TotalAdmins</h3>
+                    <p class="text-muted mb-0 small">Total Admins</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header"><strong>Quick Actions</strong></div>
+                <div class="card-body d-flex gap-2 flex-wrap">
+                    <a asp-controller="AdminTutorApplication" asp-action="Index" class="btn btn-primary">Review Tutor Applications</a>
+                    <a asp-controller="AdminManagement" asp-action="Index" class="btn btn-outline-secondary">Manage Admins</a>
+                    @if (Model.IsAlsoTutor)
+                    {
+                        <a asp-controller="Tutors" asp-action="Dashboard" class="btn btn-outline-secondary">View My Tutor Profile</a>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

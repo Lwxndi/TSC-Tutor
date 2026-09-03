@@ -1,0 +1,295 @@
+﻿@model Tutor_Manager.ViewModels.ParentDashboardViewModel
+
+@{
+    ViewData["Title"] = "Parent Dashboard";
+}
+
+<div class="container-fluid py-4">
+
+    <!-- Dashboard Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="p-4 bg-primary text-white rounded-3 shadow-sm">
+                <h1 class="h3 mb-2">
+                    Welcome, @Model.FirstName
+                </h1>
+
+                <p class="mb-0">
+                    Manage your learners and keep track of their tutoring activities.
+                </p>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Success Message -->
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["SuccessMessage"]
+
+            <button type="button"
+                    class="btn-close"
+                    data-bs-dismiss="alert"
+                    aria-label="Close">
+            </button>
+        </div>
+    }
+
+
+    <!-- Error Message -->
+    @if (TempData["LinkError"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["LinkError"]
+
+            <button type="button"
+                    class="btn-close"
+                    data-bs-dismiss="alert"
+                    aria-label="Close">
+            </button>
+        </div>
+    }
+
+
+    <div class="row g-4">
+
+        <!-- Linked Learners -->
+        <div class="col-lg-8">
+
+            <div class="card shadow-sm border-0">
+
+                <div class="card-header bg-white py-3">
+                    <div class="d-flex justify-content-between align-items-center">
+
+                        <div>
+                            <h2 class="h5 mb-1">
+                                My Learners
+                            </h2>
+
+                            <small class="text-muted">
+                                Learners linked to your parent/guardian account
+                            </small>
+                        </div>
+
+                        <span class="badge bg-primary">
+                            @Model.Learners.Count
+                        </span>
+
+                    </div>
+                </div>
+
+
+                <div class="card-body">
+
+                    @if (Model.Learners.Any())
+                    {
+                        <div class="row g-3">
+
+                            @foreach (var learner in Model.Learners)
+                            {
+                                <div class="col-md-6">
+
+                                    <div class="card h-100 border">
+
+                                        <div class="card-body">
+
+                                            <div class="d-flex align-items-center mb-3">
+
+                                                <div class="bg-light rounded-circle p-3 me-3">
+                                                    <span class="fw-bold text-primary">
+                                                        @learner.FullName.Substring(0, 1).ToUpper()
+                                                    </span>
+                                                </div>
+
+                                                <div>
+                                                    <h3 class="h6 mb-1">
+                                                        @learner.FullName
+                                                    </h3>
+
+                                                    <small class="text-muted">
+                                                        Learner
+                                                    </small>
+                                                </div>
+
+                                            </div>
+
+
+                                            <div class="mb-2">
+                                                <small class="text-muted d-block">
+                                                    TSC Number
+                                                </small>
+
+                                                <span class="fw-semibold">
+                                                    @learner.TscNumber
+                                                </span>
+                                            </div>
+
+
+                                            <div>
+                                                <small class="text-muted d-block">
+                                                    Grade Level
+                                                </small>
+
+                                                <span class="fw-semibold">
+                                                    @learner.GradeLevel
+                                                </span>
+                                            </div>
+
+                                        </div>
+
+                                    </div>
+
+                                </div>
+                            }
+
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-5">
+
+                            <div class="mb-3">
+                                <span class="display-5 text-muted">
+                                    +
+                                </span>
+                            </div>
+
+                            <h3 class="h5">
+                                No learners linked
+                            </h3>
+
+                            <p class="text-muted mb-0">
+                                Link a learner using their TSC number to start managing their tutoring activities.
+                            </p>
+
+                        </div>
+                    }
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- Link Learner -->
+        <div class="col-lg-4">
+
+            <div class="card shadow-sm border-0">
+
+                <div class="card-header bg-white py-3">
+                    <h2 class="h5 mb-1">
+                        Link Learner
+                    </h2>
+
+                    <small class="text-muted">
+                        Add a learner to your account
+                    </small>
+                </div>
+
+
+                <div class="card-body">
+
+                    <form asp-controller="Parents"
+                          asp-action="LinkLearner"
+                          method="post">
+
+                        @Html.AntiForgeryToken()
+
+                        <div class="mb-3">
+
+                            <label for="tscNumber"
+                                   class="form-label">
+                                Learner TSC Number
+                            </label>
+
+                            <input type="text"
+                                   id="tscNumber"
+                                   name="tscNumber"
+                                   class="form-control"
+                                   placeholder="Enter TSC number"
+                                   required />
+
+                            <div class="form-text">
+                                Enter the TSC number provided by the learner.
+                            </div>
+
+                        </div>
+
+
+                        <button type="submit"
+                                class="btn btn-primary w-100">
+                            Link Learner
+                        </button>
+
+                    </form>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- Upcoming Sessions -->
+    <div class="row mt-4">
+
+        <div class="col-12">
+
+            <div class="card shadow-sm border-0">
+
+                <div class="card-header bg-white py-3">
+
+                    <h2 class="h5 mb-1">
+                        Upcoming Sessions
+                    </h2>
+
+                    <small class="text-muted">
+                        Your learners' upcoming tutoring sessions
+                    </small>
+
+                </div>
+
+
+                <div class="card-body">
+
+                    @if (Model.UpcomingSessions.Any())
+                    {
+                        <div class="list-group">
+
+                            @foreach (var session in Model.UpcomingSessions)
+                            {
+                                <div class="list-group-item">
+                                    @session
+                                </div>
+                            }
+
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-4">
+
+                            <h3 class="h6 text-muted">
+                                No upcoming sessions
+                            </h3>
+
+                            <p class="text-muted mb-0">
+                                Upcoming tutoring sessions will appear here once scheduling is available.
+                            </p>
+
+                        </div>
+                    }
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
