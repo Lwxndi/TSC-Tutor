@@ -50,6 +50,9 @@ app.UseHttpsRedirection();
 app.UseRouting();
 app.UseAuthentication();
 
+// Enable Session
+app.UseSession();
+
 app.UseAuthorization();
 
 app.MapStaticAssets();
