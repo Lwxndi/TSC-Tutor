@@ -1,0 +1,26 @@
+﻿@model (int CurrentStep, string ReferenceNumber)
+
+@{
+    var steps = new[] { "Personal", "Academic", "Subjects", "Experience", "Strengths", "Documents", "Review", "Submit" };
+}
+
+<div class="mb-4">
+    @if (!string.IsNullOrEmpty(Model.ReferenceNumber))
+    {
+        <p class="text-muted mb-2">Application Reference: <strong>@Model.ReferenceNumber</strong></p>
+    }
+    <div class="d-flex justify-content-between mb-2">
+        @for (int i = 0; i < steps.Length; i++)
+        {
+            var isActive = (i + 1) == Model.CurrentStep;
+            var isDone = (i + 1) < Model.CurrentStep;
+            <span class="small @(isActive ? "fw-bold text-primary" : isDone ? "text-success" : "text-muted")">
+                @(i + 1). @steps[i]
+            </span>
+        }
+    </div>
+    <div class="progress" style="height: 6px;">
+        <div class="progress-bar" role="progressbar"
+             style="width: @((Model.CurrentStep * 100) / steps.Length)%;"></div>
+    </div>
+</div>

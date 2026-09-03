@@ -11,8 +11,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Tutor_Manager.Migrations
 {
     [DbContext(typeof(Tutor_ManagerDatabaseContext))]
-    [Migration("20260809213046_FixedLearner")]
-    partial class FixedLearner
+    [Migration("20260826172745_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -36,6 +36,13 @@ namespace Tutor_Manager.Migrations
                     b.HasKey("UserId");
 
                     b.ToTable("Administrators");
+
+                    b.HasData(
+                        new
+                        {
+                            UserId = 1,
+                            Position = "Owner / Head Tutor"
+                        });
                 });
 
             modelBuilder.Entity("Tutor_Manager.Models.Learner", b =>
@@ -49,6 +56,10 @@ namespace Tutor_Manager.Migrations
                     b.Property<string>("SchoolName")
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("TscNumber")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("UserId");
 
@@ -92,6 +103,43 @@ namespace Tutor_Manager.Migrations
                     b.ToTable("LearnerSubjects");
                 });
 
+            modelBuilder.Entity("Tutor_Manager.Models.Notification", b =>
+                {
+                    b.Property<int>("NotificationId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("NotificationId"));
+
+                    b.Property<DateTime>("DateCreated")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsRead")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Link")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("NotificationId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Notifications");
+                });
+
             modelBuilder.Entity("Tutor_Manager.Models.Parent", b =>
                 {
                     b.Property<int>("UserId")
@@ -118,6 +166,28 @@ namespace Tutor_Manager.Migrations
                     b.HasKey("RoleId");
 
                     b.ToTable("Roles");
+
+                    b.HasData(
+                        new
+                        {
+                            RoleId = 1,
+                            RoleName = "Learner"
+                        },
+                        new
+                        {
+                            RoleId = 2,
+                            RoleName = "Tutor"
+                        },
+                        new
+                        {
+                            RoleId = 3,
+                            RoleName = "Parent"
+                        },
+                        new
+                        {
+                            RoleId = 4,
+                            RoleName = "Admin"
+                        });
                 });
 
             modelBuilder.Entity("Tutor_Manager.Models.Subject", b =>
@@ -136,6 +206,33 @@ namespace Tutor_Manager.Migrations
                     b.HasKey("SubjectId");
 
                     b.ToTable("Subjects");
+
+                    b.HasData(
+                        new
+                        {
+                            SubjectId = 1,
+                            SubjectName = "Mathematics"
+                        },
+                        new
+                        {
+                            SubjectId = 2,
+                            SubjectName = "Physical Sciences"
+                        },
+                        new
+                        {
+                            SubjectId = 3,
+                            SubjectName = "Life Sciences"
+                        },
+                        new
+                        {
+                            SubjectId = 4,
+                            SubjectName = "English Home Language"
+                        },
+                        new
+                        {
+                            SubjectId = 5,
+                            SubjectName = "Accounting"
+                        });
                 });
 
             modelBuilder.Entity("Tutor_Manager.Models.Tutor", b =>
@@ -229,6 +326,19 @@ namespace Tutor_Manager.Migrations
                     b.HasKey("UserId");
 
                     b.ToTable("Users");
+
+                    b.HasData(
+                        new
+                        {
+                            UserId = 1,
+                            DateCreated = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Email = "lwandinhlengethwa25@gmail.com",
+                            FirstName = "Admin",
+                            IsActive = true,
+                            LastName = "AdminVila",
+                            PasswordHash = "AQAAAAEAAYagAAAAEIvwxMAJ/t2/rwo6a30o39WIwMzC2nLntC98owiYso24zSx1fLtYAYjOcSRddprXUw==",
+                            PhoneNumber = "0000000000"
+                        });
                 });
 
             modelBuilder.Entity("Tutor_Manager.Models.UserRole", b =>
@@ -244,6 +354,13 @@ namespace Tutor_Manager.Migrations
                     b.HasIndex("RoleId");
 
                     b.ToTable("UserRoles");
+
+                    b.HasData(
+                        new
+                        {
+                            UserId = 1,
+                            RoleId = 4
+                        });
                 });
 
             modelBuilder.Entity("Tutor_Manager.Models.Administrator", b =>
@@ -304,6 +421,17 @@ namespace Tutor_Manager.Migrations
                     b.Navigation("Learner");
 
                     b.Navigation("Subject");
+                });
+
+            modelBuilder.Entity("Tutor_Manager.Models.Notification", b =>
+                {
+                    b.HasOne("Tutor_Manager.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Tutor_Manager.Models.Parent", b =>

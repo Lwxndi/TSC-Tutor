@@ -1,0 +1,79 @@
+﻿@model Tutor_Manager.ViewModels.TutorApplication.TutorApplicationSubjectsViewModel
+
+@{
+    ViewData["Title"] = "Tutor Application — Subjects";
+}
+
+<div class="container py-4" style="max-width: 800px;">
+    <h2 class="mb-1">Subjects You're Applying to Teach</h2>
+    <p class="text-muted mb-4">Select each subject you'd like to teach, and the grade levels you're comfortable with.</p>
+
+    @await Html.PartialAsync("_StepProgress", (3, string.Empty))
+
+    <form asp-controller="TutorApplication" asp-action="Subjects" method="post">
+        <input type="hidden" asp-for="ApplicationId" />
+        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+        @for (int i = 0; i < Model.Subjects.Count; i++)
+        {
+            <div class="card mb-3">
+                <div class="card-body">
+                    <input type="hidden" asp-for="Subjects[i].SubjectId" />
+                    <input type="hidden" asp-for="Subjects[i].SubjectName" />
+
+                    <div class="form-check mb-2">
+                        <input type="checkbox" class="form-check-input subject-toggle"
+                               asp-for="Subjects[i].Selected" data-index="@i" />
+                        <label class="form-check-label fw-bold" asp-for="Subjects[i].Selected">
+                            @Model.Subjects[i].SubjectName
+                        </label>
+                    </div>
+
+                    <div class="subject-details ms-4 @(Model.Subjects[i].Selected ? "" : "d-none")" id="details-@i">
+                        <label class="form-label small">Grade Levels</label>
+                        <div class="d-flex gap-3 mb-2">
+                            @foreach (var grade in new[] { "10", "11", "12" })
+                            {
+                                var checkboxId = $"grade-{i}-{grade}";
+                                var isChecked = Model.Subjects[i].GradeLevels.Contains(grade);
+                                <div class="form-check form-check-inline">
+                                    <input type="checkbox" class="form-check-input"
+                                           id="@checkboxId"
+                                           name="Subjects[@i].GradeLevels"
+                                           value="@grade"
+                                           checked="@isChecked" />
+                                    <label class="form-check-label" for="@checkboxId">Grade @grade</label>
+                                </div>
+                            }
+                        </div>
+
+                        <label asp-for="Subjects[i].CompetencyNote" class="form-label small">Competency Note (optional)</label>
+                        <input asp-for="Subjects[i].CompetencyNote" class="form-control form-control-sm mb-2" />
+
+                        <label asp-for="Subjects[i].ResultNote" class="form-label small">Relevant Result (optional)</label>
+                        <input asp-for="Subjects[i].ResultNote" class="form-control form-control-sm" />
+                    </div>
+                </div>
+            </div>
+        }
+
+        <div class="d-flex justify-content-between mt-4">
+            <a asp-action="AcademicInfo" asp-route-id="@Model.ApplicationId" class="btn btn-outline-secondary">Back</a>
+            <button type="submit" class="btn btn-primary">Next: Experience</button>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        document.querySelectorAll(".subject-toggle").forEach(checkbox => {
+            checkbox.addEventListener("change", function() {
+                const index = this.dataset.index;
+                const details = document.getElementById("details-" + index);
+                details.classList.toggle("d-none", !this.checked);
+            });
+        });
+    </script>
+}

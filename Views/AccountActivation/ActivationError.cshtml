@@ -1,0 +1,21 @@
+﻿@{
+    ViewData["Title"] = "Activation Link Issue";
+}
+
+<div class="container py-5 text-center" style="max-width: 500px;">
+    <div class="mb-4">
+        <span class="display-1 text-danger">⚠</span>
+    </div>
+
+    <h2 class="mb-3">This Link Isn't Working</h2>
+
+    <p class="text-muted mb-4">
+        @(ViewBag.ErrorMessage ?? "Something went wrong with this activation link.")
+    </p>
+
+    <p class="text-muted">
+        If your link has expired, please contact The Science Community so we can send you a new one.
+    </p>
+
+    <a asp-controller="Home" asp-action="Index" class="btn btn-outline-primary mt-3">Return to Homepage</a>
+</div>

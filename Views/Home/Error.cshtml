@@ -1,0 +1,77 @@
+﻿@* Views/Home/Error.cshtml *@
+@{
+    ViewData["Title"] = "Error";
+}
+
+<style>
+    .error-page {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 70vh;
+        text-align: center;
+        padding: 40px 20px;
+        font-family: 'Segoe UI', sans-serif;
+    }
+
+    .error-icon {
+        font-size: 64px;
+        margin-bottom: 10px;
+    }
+
+    .error-page h1 {
+        font-size: 28px;
+        color: #2c3e50;
+        margin-bottom: 8px;
+    }
+
+    .error-page p {
+        color: #6c757d;
+        max-width: 420px;
+        margin-bottom: 25px;
+    }
+
+    .error-page a.btn {
+        background-color: #2c7a7b;
+        color: white;
+        padding: 10px 22px;
+        border-radius: 6px;
+        text-decoration: none;
+        font-weight: 500;
+    }
+
+    .error-page a.btn:hover {
+        background-color: #235e5f;
+    }
+
+    .error-details {
+        margin-top: 30px;
+        max-width: 600px;
+        width: 100%;
+        text-align: left;
+        background: #f8f9fa;
+        border: 1px solid #e2e2e2;
+        border-radius: 6px;
+        padding: 16px;
+        font-family: Consolas, monospace;
+        font-size: 13px;
+        color: #b02a37;
+        white-space: pre-wrap;
+        word-break: break-word;
+    }
+</style>
+
+<div class="error-page">
+    <div class="error-icon">🚧</div>
+    <h1>This part is still under construction</h1>
+    <p>Something went wrong on our end. We're working on it — try going back to the dashboard for now.</p>
+    <a class="btn" href="/">Back to Dashboard</a>
+
+    @if (ViewBag.ErrorMessage != null)
+    {
+        <div class="error-details">
+            @ViewBag.ErrorMessage
+        </div>
+    }
+</div>

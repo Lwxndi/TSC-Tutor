@@ -1,0 +1,100 @@
+﻿@model Tutor_Manager.ViewModels.LearnerDashboardViewModel
+
+@{
+    ViewData["Title"] = "My Dashboard";
+}
+
+<div class="container py-4">
+    <h2 class="mb-4">Welcome back, @Model.FirstName!</h2>
+
+    <div class="row g-4">
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-header"><strong>My Profile</strong></div>
+                <div class="card-body">
+                    <dl class="row mb-0">
+                        <dt class="col-sm-5">TSC Number</dt>
+                        <dd class="col-sm-7">@Model.TscNumber</dd>
+
+                        <dt class="col-sm-5">Grade</dt>
+                        <dd class="col-sm-7">@Model.GradeLevel</dd>
+
+                        <dt class="col-sm-5">School</dt>
+                        <dd class="col-sm-7">@Model.SchoolName</dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-header"><strong>My Subjects</strong></div>
+                <div class="card-body">
+                    @if (!Model.Subjects.Any())
+                    {
+                        <p class="text-muted mb-0">No subjects registered yet.</p>
+                    }
+                    else
+                    {
+                        <ul class="mb-0">
+                            @foreach (var subject in Model.Subjects)
+                            {
+                                <li>@subject</li>
+                            }
+                        </ul>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-header"><strong>My Guardians</strong></div>
+                <div class="card-body">
+                    @if (!Model.Guardians.Any())
+                    {
+                        <p class="text-muted mb-0">No guardians linked yet.</p>
+                    }
+                    else
+                    {
+                        <ul class="list-unstyled mb-0">
+                            @foreach (var guardian in Model.Guardians)
+                            {
+                                <li class="mb-2">
+                                    <strong>@guardian.FullName</strong>
+                                    @if (!string.IsNullOrEmpty(guardian.Relationship))
+                                    {
+                                        <span class="text-muted"> (@guardian.Relationship)</span>
+                                    }
+                                    <br />
+                                    <span class="text-muted small">@guardian.PhoneNumber</span>
+                                </li>
+                            }
+                        </ul>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-header"><strong>Upcoming Sessions</strong></div>
+                <div class="card-body">
+                    @if (!Model.UpcomingSessions.Any())
+                    {
+                        <p class="text-muted mb-0">Session scheduling isn't available yet — check back soon.</p>
+                    }
+                    else
+                    {
+                        <ul class="mb-0">
+                            @foreach (var session in Model.UpcomingSessions)
+                            {
+                                <li>@session</li>
+                            }
+                        </ul>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

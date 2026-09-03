@@ -1,0 +1,165 @@
+﻿@model Tutor_Manager.ViewModels.TutorApplication.TutorApplicationReviewViewModel
+
+@{
+    ViewData["Title"] = "Tutor Application — Review";
+}
+
+<div class="container py-4" style="max-width: 800px;">
+    <h2 class="mb-1">Review Your Application</h2>
+    <p class="text-muted mb-1">Reference: <strong>@Model.ReferenceNumber</strong></p>
+    <p class="text-muted mb-4">Please check everything below is correct before submitting.</p>
+
+    @await Html.PartialAsync("_StepProgress", (7, string.Empty))
+
+    <!-- Personal Info -->
+    <div class="card mb-3">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <strong>Personal Information</strong>
+            <a asp-action="PersonalInfo" asp-route-id="@Model.ApplicationId" class="btn btn-sm btn-outline-secondary">Edit</a>
+        </div>
+        <div class="card-body">
+            <dl class="row mb-0">
+                <dt class="col-sm-4">Name</dt>
+                <dd class="col-sm-8">@Model.PersonalInfo.FirstName @Model.PersonalInfo.Surname</dd>
+
+                <dt class="col-sm-4">Email</dt>
+                <dd class="col-sm-8">@Model.PersonalInfo.Email</dd>
+
+                <dt class="col-sm-4">Phone</dt>
+                <dd class="col-sm-8">@Model.PersonalInfo.Phone</dd>
+
+                @if (!string.IsNullOrEmpty(Model.PersonalInfo.AltPhone))
+                {
+                    <dt class="col-sm-4">Alt. Phone</dt>
+                    <dd class="col-sm-8">@Model.PersonalInfo.AltPhone</dd>
+                }
+
+                <dt class="col-sm-4">Location</dt>
+                <dd class="col-sm-8">@Model.PersonalInfo.LocationPreference — @Model.PersonalInfo.AreaCity</dd>
+            </dl>
+        </div>
+    </div>
+
+    <!-- Academic Info -->
+    <div class="card mb-3">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <strong>Academic Information</strong>
+            <a asp-action="AcademicInfo" asp-route-id="@Model.ApplicationId" class="btn btn-sm btn-outline-secondary">Edit</a>
+        </div>
+        <div class="card-body">
+            @if (!Model.AcademicInfo.Qualifications.Any())
+            {
+                <p class="text-muted mb-0">No qualifications added.</p>
+            }
+            else
+            {
+                @foreach (var q in Model.AcademicInfo.Qualifications)
+                {
+                    <div class="mb-2">
+                        <strong>@q.QualificationType</strong>
+                        @if (!string.IsNullOrEmpty(q.Institution))
+                        {
+                            <span> — @q.Institution</span>
+                        }
+                        @if (!string.IsNullOrEmpty(q.FieldOfStudy))
+                        {
+                            <span> (@q.FieldOfStudy)</span>
+                        }
+                        <br />
+                        <span class="text-muted small">@q.YearCompleted &middot; @q.StudyStatus</span>
+                    </div>
+                }
+            }
+        </div>
+    </div>
+
+    <!-- Subjects -->
+    <div class="card mb-3">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <strong>Subjects</strong>
+            <a asp-action="Subjects" asp-route-id="@Model.ApplicationId" class="btn btn-sm btn-outline-secondary">Edit</a>
+        </div>
+        <div class="card-body">
+            @if (!Model.SelectedSubjects.Any())
+            {
+                <p class="text-muted mb-0">No subjects selected.</p>
+            }
+            else
+            {
+                <ul class="mb-0">
+                    @foreach (var subject in Model.SelectedSubjects)
+                    {
+                        <li><strong>@subject.SubjectName</strong> — Grades @string.Join(", ", subject.GradeLevels)</li>
+                    }
+                </ul>
+            }
+        </div>
+    </div>
+
+    <!-- Experience -->
+    <div class="card mb-3">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <strong>Teaching Experience</strong>
+            <a asp-action="Experience" asp-route-id="@Model.ApplicationId" class="btn btn-sm btn-outline-secondary">Edit</a>
+        </div>
+        <div class="card-body">
+            @if (!Model.Experience.Any())
+            {
+                <p class="text-muted mb-0">No previous experience listed.</p>
+            }
+            else
+            {
+                @foreach (var entry in Model.Experience)
+                {
+                    <p class="mb-1"><strong>@entry.Institution</strong> — @entry.SubjectsTaught (@entry.Duration)</p>
+                }
+            }
+        </div>
+    </div>
+
+    <!-- Strengths -->
+    <div class="card mb-3">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <strong>Strengths</strong>
+            <a asp-action="Strengths" asp-route-id="@Model.ApplicationId" class="btn btn-sm btn-outline-secondary">Edit</a>
+        </div>
+        <div class="card-body">
+            @if (Model.SelectedStrengths.Any())
+            {
+                <p class="mb-2">@string.Join(", ", Model.SelectedStrengths)</p>
+            }
+            @if (!string.IsNullOrEmpty(Model.StrengthsNote))
+            {
+                <p class="text-muted mb-0">@Model.StrengthsNote</p>
+            }
+        </div>
+    </div>
+
+    <!-- Documents -->
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <strong>Supporting Documents</strong>
+            <a asp-action="Documents" asp-route-id="@Model.ApplicationId" class="btn btn-sm btn-outline-secondary">Edit</a>
+        </div>
+        <div class="card-body">
+            @if (!Model.UploadedDocumentNames.Any())
+            {
+                <p class="text-danger mb-0">No documents uploaded yet.</p>
+            }
+            else
+            {
+                <ul class="mb-0">
+                    @foreach (var doc in Model.UploadedDocumentNames)
+                    {
+                        <li>@doc</li>
+                    }
+                </ul>
+            }
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-between mt-4">
+        <a asp-action="Documents" asp-route-id="@Model.ApplicationId" class="btn btn-outline-secondary">Back</a>
+        <a asp-action="Submit" asp-route-id="@Model.ApplicationId" class="btn btn-success">Looks Good — Continue to Submit</a>
+    </div>
+</div>

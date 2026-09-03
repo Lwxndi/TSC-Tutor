@@ -1,0 +1,144 @@
+﻿@model Tutor_Manager.ViewModels.TutorApplication.TutorApplicationAcademicInfoViewModel
+
+<div class="container py-4" style="max-width: 800px;">
+    <h2 class="mb-1">Academic Information</h2>
+    <p class="text-muted mb-4">Add each qualification you hold — Matric counts as one.</p>
+
+    @await Html.PartialAsync("_StepProgress", (2, string.Empty))
+
+    <form asp-controller="TutorApplication" asp-action="AcademicInfo" method="post">
+        <input type="hidden" asp-for="ApplicationId" />
+        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+        <div id="qualificationsContainer">
+            @for (int i = 0; i < Model.Qualifications.Count; i++)
+            {
+                <div class="card mb-3 qualification-card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between mb-2">
+                            <h6 class="mb-0">Qualification @(i + 1)</h6>
+                            <button type="button" class="btn btn-sm btn-outline-danger remove-qualification">Remove</button>
+                        </div>
+                        <div class="row g-2">
+                            <div class="col-md-6">
+                                <label class="form-label small">Qualification Type</label>
+                                <select asp-for="Qualifications[i].QualificationType" class="form-select form-select-sm">
+                                    <option value="">-- Select --</option>
+                                    <option>Matric</option>
+                                    <option>Certificate</option>
+                                    <option>Diploma</option>
+                                    <option>Bachelor's Degree</option>
+                                    <option>Honours Degree</option>
+                                    <option>Master's Degree</option>
+                                    <option>Doctorate</option>
+                                    <option>Other</option>
+                                </select>
+                                <span asp-validation-for="Qualifications[i].QualificationType" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small">Institution</label>
+                                <input asp-for="Qualifications[i].Institution" class="form-control form-control-sm" placeholder="e.g. Rondebosch High School" />
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small">Field of Study</label>
+                                <input asp-for="Qualifications[i].FieldOfStudy" class="form-control form-control-sm" />
+                                <div class="form-text">Leave blank if not applicable, e.g. for Matric.</div>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label small">Year Completed / Expected Completion</label>
+                                <input asp-for="Qualifications[i].YearCompleted" type="number" class="form-control form-control-sm" />
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label small">Status</label>
+                                <select asp-for="Qualifications[i].StudyStatus" class="form-select form-select-sm">
+                                    <option value="">-- Select --</option>
+                                    <option>Completed</option>
+                                    <option>In Progress</option>
+                                </select>
+                                <span asp-validation-for="Qualifications[i].StudyStatus" class="text-danger small"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <button type="button" id="addQualificationBtn" class="btn btn-outline-primary btn-sm mb-4">+ Add Another Qualification</button>
+
+        <div class="d-flex justify-content-between mt-4">
+            <a asp-action="PersonalInfo" asp-route-id="@Model.ApplicationId" class="btn btn-outline-secondary">Back</a>
+            <div>
+                <button type="submit" name="isSkip" value="true" formnovalidate class="btn btn-link text-muted">Skip for now</button>
+                <button type="submit" name="isSkip" value="false" class="btn btn-primary">Next: Subjects</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<template id="qualificationTemplate">
+    <div class="card mb-3 qualification-card">
+        <div class="card-body">
+            <div class="d-flex justify-content-between mb-2">
+                <h6 class="mb-0">New Qualification</h6>
+                <button type="button" class="btn btn-sm btn-outline-danger remove-qualification">Remove</button>
+            </div>
+            <div class="row g-2">
+                <div class="col-md-6">
+                    <label class="form-label small">Qualification Type</label>
+                    <select name="Qualifications[__INDEX__].QualificationType" class="form-select form-select-sm">
+                        <option value="">-- Select --</option>
+                        <option>Matric</option>
+                        <option>Certificate</option>
+                        <option>Diploma</option>
+                        <option>Bachelor's Degree</option>
+                        <option>Honours Degree</option>
+                        <option>Master's Degree</option>
+                        <option>Doctorate</option>
+                        <option>Other</option>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label small">Institution</label>
+                    <input name="Qualifications[__INDEX__].Institution" class="form-control form-control-sm" placeholder="e.g. Rondebosch High School" />
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label small">Field of Study</label>
+                    <input name="Qualifications[__INDEX__].FieldOfStudy" class="form-control form-control-sm" />
+                    <div class="form-text">Leave blank if not applicable, e.g. for Matric.</div>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small">Year Completed / Expected Completion</label>
+                    <input name="Qualifications[__INDEX__].YearCompleted" type="number" class="form-control form-control-sm" />
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small">Status</label>
+                    <select name="Qualifications[__INDEX__].StudyStatus" class="form-select form-select-sm">
+                        <option value="">-- Select --</option>
+                        <option>Completed</option>
+                        <option>In Progress</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        let qIndex = @Model.Qualifications.Count;
+        const qContainer = document.getElementById("qualificationsContainer");
+
+        document.getElementById("addQualificationBtn").addEventListener("click", function() {
+            const html = document.getElementById("qualificationTemplate").innerHTML.replaceAll("__INDEX__", qIndex);
+            qContainer.insertAdjacentHTML("beforeend", html);
+            qIndex++;
+        });
+
+        document.addEventListener("click", function(e) {
+            if (e.target.classList.contains("remove-qualification")) {
+                e.target.closest(".qualification-card").remove();
+            }
+        });
+    </script>
+}

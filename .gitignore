@@ -3,3 +3,6 @@ obj/
 .vs/
 *.user
 *.suo
+# Applicant uploaded documents - never commit real applicant data
+App_Data/ApplicationDocuments/*
+!App_Data/ApplicationDocuments/.gitkeep

@@ -1,0 +1,65 @@
+﻿@model Tutor_Manager.ViewModels.TutorApplication.AdminApplicationListViewModel
+
+@{
+    ViewData["Title"] = "Tutor Applications";
+}
+
+<div class="container py-4">
+    <h2 class="mb-4">Tutor Applications</h2>
+
+    <div class="mb-3">
+        <div class="btn-group" role="group">
+            <a asp-action="Index" class="btn btn-sm @(Model.StatusFilter == null ? "btn-primary" : "btn-outline-primary")">All</a>
+            <a asp-action="Index" asp-route-status="Pending" class="btn btn-sm @(Model.StatusFilter?.ToString() == "Pending" ? "btn-primary" : "btn-outline-primary")">Pending</a>
+            <a asp-action="Index" asp-route-status="ChangesRequired" class="btn btn-sm @(Model.StatusFilter?.ToString() == "ChangesRequired" ? "btn-primary" : "btn-outline-primary")">Changes Required</a>
+            <a asp-action="Index" asp-route-status="Approved" class="btn btn-sm @(Model.StatusFilter?.ToString() == "Approved" ? "btn-primary" : "btn-outline-primary")">Approved</a>
+            <a asp-action="Index" asp-route-status="Rejected" class="btn btn-sm @(Model.StatusFilter?.ToString() == "Rejected" ? "btn-primary" : "btn-outline-primary")">Rejected</a>
+        </div>
+    </div>
+
+    @if (!Model.Applications.Any())
+    {
+        <p class="text-muted">No applications found for this filter.</p>
+    }
+    else
+    {
+        <table class="table table-hover align-middle">
+            <thead>
+                <tr>
+                    <th>Reference</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Location</th>
+                    <th>Status</th>
+                    <th>Applied</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var app in Model.Applications)
+                {
+                    var badgeClass = app.Status.ToString() switch
+                    {
+                        "Pending" => "text-bg-warning",
+                        "ChangesRequired" => "text-bg-info",
+                        "Approved" => "text-bg-success",
+                        "Rejected" => "text-bg-danger",
+                        _ => "text-bg-secondary"
+                    };
+
+                    <tr>
+                        <td>@app.ReferenceNumber</td>
+                        <td>@app.FirstName @app.Surname</td>
+                        <td>@app.Email</td>
+                        <td>@app.LocationPreference</td>
+                        <td><span class="badge @badgeClass">@app.Status</span></td>
+                        <td>@(app.DateApplied?.ToString("dd MMM yyyy") ?? "—")</td>
+                        <td>
+                            <a asp-action="Details" asp-route-id="@app.ApplicationId" class="btn btn-sm btn-outline-primary">View</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</div>

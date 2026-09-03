@@ -1,0 +1,140 @@
+﻿@model Tutor_Manager.ViewModels.TutorApplication.TutorApplicationExperienceViewModel
+
+@{
+    ViewData["Title"] = "Tutor Application — Experience";
+}
+
+<div class="container py-4" style="max-width: 800px;">
+    <h2 class="mb-1">Teaching Experience</h2>
+    <p class="text-muted mb-4">Tell us about any previous tutoring or teaching experience.</p>
+
+    @await Html.PartialAsync("_StepProgress", (4, string.Empty))
+
+    <form asp-controller="TutorApplication" asp-action="Experience" method="post" id="experienceForm">
+        <input type="hidden" asp-for="ApplicationId" />
+        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+        <div class="form-check form-switch mb-4">
+            <input type="checkbox" class="form-check-input" asp-for="HasExperience" id="hasExperienceToggle" />
+            <label class="form-check-label" asp-for="HasExperience">I have previous tutoring/teaching experience</label>
+        </div>
+
+        <div id="entriesContainer" class="@(Model.HasExperience ? "" : "d-none")">
+            @for (int i = 0; i < Model.Entries.Count; i++)
+            {
+                <div class="card mb-3 entry-card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between mb-2">
+                            <h6 class="mb-0">Entry @(i + 1)</h6>
+                            <button type="button" class="btn btn-sm btn-outline-danger remove-entry">Remove</button>
+                        </div>
+
+                        <div class="row g-2">
+                            <div class="col-md-6">
+                                <label asp-for="Entries[i].Institution" class="form-label small"></label>
+                                <input asp-for="Entries[i].Institution" class="form-control form-control-sm" />
+                                <span asp-validation-for="Entries[i].Institution" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="Entries[i].SubjectsTaught" class="form-label small"></label>
+                                <input asp-for="Entries[i].SubjectsTaught" class="form-control form-control-sm" />
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="Entries[i].GradeLevels" class="form-label small"></label>
+                                <input asp-for="Entries[i].GradeLevels" class="form-control form-control-sm" placeholder="e.g. Grade 10-12" />
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="Entries[i].Duration" class="form-label small"></label>
+                                <input asp-for="Entries[i].Duration" class="form-control form-control-sm" placeholder="e.g. 2 years" />
+                            </div>
+                            <div class="col-12">
+                                <label asp-for="Entries[i].Responsibilities" class="form-label small"></label>
+                                <textarea asp-for="Entries[i].Responsibilities" class="form-control form-control-sm" rows="2"></textarea>
+                            </div>
+                            <div class="col-12">
+                                <label asp-for="Entries[i].Achievements" class="form-label small"></label>
+                                <textarea asp-for="Entries[i].Achievements" class="form-control form-control-sm" rows="2"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <button type="button" id="addEntryBtn" class="btn btn-outline-primary btn-sm mb-4 @(Model.HasExperience ? "" : "d-none")">
+            + Add Another Entry
+        </button>
+
+        <div class="d-flex justify-content-between mt-4">
+            <a asp-action="Subjects" asp-route-id="@Model.ApplicationId" class="btn btn-outline-secondary">Back</a>
+            <button type="submit" class="btn btn-primary">Next: Strengths</button>
+        </div>
+    </form>
+</div>
+
+<template id="entryTemplate">
+    <div class="card mb-3 entry-card">
+        <div class="card-body">
+            <div class="d-flex justify-content-between mb-2">
+                <h6 class="mb-0">New Entry</h6>
+                <button type="button" class="btn btn-sm btn-outline-danger remove-entry">Remove</button>
+            </div>
+            <div class="row g-2">
+                <div class="col-md-6">
+                    <label class="form-label small">Institution/Organisation</label>
+                    <input name="Entries[__INDEX__].Institution" class="form-control form-control-sm" />
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label small">Subjects Taught</label>
+                    <input name="Entries[__INDEX__].SubjectsTaught" class="form-control form-control-sm" />
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label small">Grade Levels</label>
+                    <input name="Entries[__INDEX__].GradeLevels" class="form-control form-control-sm" placeholder="e.g. Grade 10-12" />
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label small">Duration</label>
+                    <input name="Entries[__INDEX__].Duration" class="form-control form-control-sm" placeholder="e.g. 2 years" />
+                </div>
+                <div class="col-12">
+                    <label class="form-label small">Responsibilities</label>
+                    <textarea name="Entries[__INDEX__].Responsibilities" class="form-control form-control-sm" rows="2"></textarea>
+                </div>
+                <div class="col-12">
+                    <label class="form-label small">Achievements</label>
+                    <textarea name="Entries[__INDEX__].Achievements" class="form-control form-control-sm" rows="2"></textarea>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        let entryIndex = @Model.Entries.Count;
+
+        const toggle = document.getElementById("hasExperienceToggle");
+        const container = document.getElementById("entriesContainer");
+        const addBtn = document.getElementById("addEntryBtn");
+
+        toggle.addEventListener("change", function() {
+            container.classList.toggle("d-none", !this.checked);
+            addBtn.classList.toggle("d-none", !this.checked);
+        });
+
+        addBtn.addEventListener("click", function() {
+            const template = document.getElementById("entryTemplate").innerHTML;
+            const html = template.replaceAll("__INDEX__", entryIndex);
+            container.insertAdjacentHTML("beforeend", html);
+            entryIndex++;
+        });
+
+        document.addEventListener("click", function(e) {
+            if (e.target.classList.contains("remove-entry")) {
+                e.target.closest(".entry-card").remove();
+            }
+        });
+    </script>
+}

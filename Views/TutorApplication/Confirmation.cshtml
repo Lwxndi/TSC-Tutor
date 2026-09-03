@@ -1,0 +1,26 @@
+﻿@model Tutor_Manager.ViewModels.TutorApplication.TutorApplicationConfirmationViewModel
+
+@{
+    ViewData["Title"] = "Application Submitted";
+}
+
+<div class="container py-5 text-center" style="max-width: 600px;">
+    <div class="mb-4">
+        <span class="display-1 text-success">✓</span>
+    </div>
+
+    <h2 class="mb-3">Application Submitted</h2>
+
+    <p class="lead">
+        Your application reference number is:
+        <br />
+        <strong class="fs-3">@Model.ReferenceNumber</strong>
+    </p>
+
+    <p class="text-muted">
+        You'll receive an email once a decision has been made. Please keep your reference number
+        for any future correspondence with The Science Community.
+    </p>
+
+    <a asp-controller="Home" asp-action="Index" class="btn btn-primary mt-3">Return to Homepage</a>
+</div>

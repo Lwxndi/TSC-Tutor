@@ -1,0 +1,179 @@
+﻿@model Tutor_Manager.ViewModels.TutorApplication.AdminApplicationDetailViewModel
+
+@{
+    ViewData["Title"] = "Application Details";
+
+    var badgeClass = Model.Status.ToString() switch
+    {
+        "Pending" => "text-bg-warning",
+        "ChangesRequired" => "text-bg-info",
+        "Approved" => "text-bg-success",
+        "Rejected" => "text-bg-danger",
+        _ => "text-bg-secondary"
+    };
+}
+
+<div class="container py-4" style="max-width: 900px;">
+    <div class="d-flex justify-content-between align-items-center mb-1">
+        <h2 class="mb-0">@Model.PersonalInfo.FirstName @Model.PersonalInfo.Surname</h2>
+        <span class="badge @badgeClass fs-6">@Model.Status</span>
+    </div>
+    <p class="text-muted mb-4">Reference: @Model.ReferenceNumber</p>
+
+    <div class="card mb-3">
+        <div class="card-header"><strong>Personal Information</strong></div>
+        <div class="card-body">
+            <dl class="row mb-0">
+                <dt class="col-sm-3">Email</dt>
+                <dd class="col-sm-9">@Model.PersonalInfo.Email</dd>
+
+                <dt class="col-sm-3">Phone</dt>
+                <dd class="col-sm-9">@Model.PersonalInfo.Phone @(!string.IsNullOrEmpty(Model.PersonalInfo.AltPhone) ? $"/ {Model.PersonalInfo.AltPhone}" : "")</dd>
+
+                <dt class="col-sm-3">Location</dt>
+                <dd class="col-sm-9">@Model.PersonalInfo.LocationPreference — @Model.PersonalInfo.AreaCity</dd>
+            </dl>
+        </div>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-header"><strong>Academic Information</strong></div>
+        <div class="card-body">
+            @if (!Model.AcademicInfo.Qualifications.Any())
+            {
+                <p class="text-muted mb-0">No qualifications provided.</p>
+            }
+            else
+            {
+                @foreach (var q in Model.AcademicInfo.Qualifications)
+                {
+                    <div class="mb-2">
+                        <strong>@q.QualificationType</strong>
+                        @if (!string.IsNullOrEmpty(q.Institution))
+                        {
+                            <span> — @q.Institution</span>
+                        }
+                        @if (!string.IsNullOrEmpty(q.FieldOfStudy))
+                        {
+                            <span> (@q.FieldOfStudy)</span>
+                        }
+                        <br />
+                        <span class="text-muted small">@q.YearCompleted &middot; @q.StudyStatus</span>
+                    </div>
+                }
+            }
+        </div>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-header"><strong>Subjects</strong></div>
+        <div class="card-body">
+            @if (!Model.Subjects.Any())
+            {
+                <p class="text-muted mb-0">None selected.</p>
+            }
+            else
+            {
+                <ul class="mb-0">
+                    @foreach (var subject in Model.Subjects)
+                    {
+                        <li><strong>@subject.SubjectName</strong> — Grades @string.Join(", ", subject.GradeLevels)</li>
+                    }
+                </ul>
+            }
+        </div>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-header"><strong>Teaching Experience</strong></div>
+        <div class="card-body">
+            @if (!Model.Experience.Any())
+            {
+                <p class="text-muted mb-0">No previous experience listed.</p>
+            }
+            else
+            {
+                @foreach (var entry in Model.Experience)
+                {
+                    <div class="mb-2">
+                        <strong>@entry.Institution</strong> — @entry.SubjectsTaught (@entry.GradeLevels, @entry.Duration)
+                        @if (!string.IsNullOrEmpty(entry.Responsibilities))
+                        {
+                            <p class="text-muted small mb-0">@entry.Responsibilities</p>
+                        }
+                    </div>
+                }
+            }
+        </div>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-header"><strong>Strengths</strong></div>
+        <div class="card-body">
+            @if (Model.SelectedStrengths.Any())
+            {
+                <p class="mb-2">@string.Join(", ", Model.SelectedStrengths)</p>
+            }
+            @if (!string.IsNullOrEmpty(Model.StrengthsNote))
+            {
+                <p class="text-muted mb-0">@Model.StrengthsNote</p>
+            }
+        </div>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-header"><strong>Supporting Documents</strong></div>
+        <div class="card-body">
+            @if (!Model.Documents.Any())
+            {
+                <p class="text-danger mb-0">No documents uploaded.</p>
+            }
+            else
+            {
+                <ul class="mb-0">
+                    @foreach (var doc in Model.Documents)
+                    {
+                        <li>
+                            <strong>@doc.DocumentType</strong> —
+                            <a href="@doc.DownloadUrl" target="_blank">@doc.FileName</a>
+                        </li>
+                    }
+                </ul>
+            }
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header"><strong>Consent & Audit</strong></div>
+        <div class="card-body">
+            <dl class="row mb-0">
+                <dt class="col-sm-4">POPIA Consent</dt>
+                <dd class="col-sm-8">@(Model.ConsentGiven ? "Given" : "Not given") @(Model.ConsentDate.HasValue ? $"on {Model.ConsentDate:dd MMM yyyy}" : "")</dd>
+
+                <dt class="col-sm-4">Date Applied</dt>
+                <dd class="col-sm-8">@(Model.DateApplied?.ToString("dd MMM yyyy") ?? "—")</dd>
+
+                @if (Model.DateReviewed.HasValue)
+                {
+                    <dt class="col-sm-4">Reviewed</dt>
+                    <dd class="col-sm-8">@Model.DateReviewed?.ToString("dd MMM yyyy") by @Model.ReviewedByAdminName</dd>
+                }
+
+                @if (!string.IsNullOrEmpty(Model.CreatedTutorNumber))
+                {
+                    <dt class="col-sm-4">Tutor Number</dt>
+                    <dd class="col-sm-8">@Model.CreatedTutorNumber</dd>
+                }
+            </dl>
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-between">
+        <a asp-action="Index" class="btn btn-outline-secondary">Back to List</a>
+
+        @if (Model.Status.ToString() == "Pending" || Model.Status.ToString() == "ChangesRequired")
+        {
+            <a asp-action="Decision" asp-route-id="@Model.ApplicationId" class="btn btn-primary">Make a Decision</a>
+        }
+    </div>
+</div>

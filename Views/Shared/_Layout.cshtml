@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+﻿@* <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -11,6 +11,7 @@
 </head>
 <body>
     <header>
+
         <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
             <div class="container-fluid">
                 <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">Tutor_Manager</a>
@@ -25,6 +26,9 @@
                         </li>
                         <li class="nav-item">
                             <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Login">Log In</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Error">Error</a>
                         </li>
                     </ul>
                 </div>
@@ -45,6 +49,255 @@
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html> *@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Tutor_Manager</title>
+    <script type="importmap"></script>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/Tutor_Manager.styles.css" asp-append-version="true" />
+    <style>
+            :root {
+                --sidebar-width: 240px;
+                --sidebar-collapsed-width: 64px;
+            }
+
+            body {
+                display: flex;
+                min-height: 100vh;
+            }
+
+            #sidebar {
+                width: var(--sidebar-width);
+                min-width: var(--sidebar-width);
+                background-color: #212529;
+                color: #fff;
+                transition: width 0.2s ease, min-width 0.2s ease;
+                overflow-x: hidden;
+                display: flex;
+                flex-direction: column;
+            }
+
+                #sidebar.collapsed {
+                    width: var(--sidebar-collapsed-width);
+                    min-width: var(--sidebar-collapsed-width);
+                }
+
+                #sidebar .sidebar-header {
+                    padding: 1rem;
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    border-bottom: 1px solid rgba(255,255,255,0.1);
+                }
+
+                #sidebar .brand-text {
+                    font-weight: 600;
+                    white-space: nowrap;
+                    overflow: hidden;
+                }
+
+                #sidebar.collapsed .brand-text,
+                #sidebar.collapsed .nav-label,
+                #sidebar.collapsed .section-label {
+                    display: none;
+                }
+
+                #sidebar .nav-link {
+                    color: rgba(255,255,255,0.75);
+                    padding: 0.6rem 1rem;
+                    display: flex;
+                    align-items: center;
+                    gap: 0.75rem;
+                    white-space: nowrap;
+                }
+
+                    #sidebar .nav-link:hover,
+                    #sidebar .nav-link.active {
+                        color: #fff;
+                        background-color: rgba(255,255,255,0.08);
+                    }
+
+                    #sidebar .nav-link i {
+                        font-size: 1.1rem;
+                        min-width: 1.25rem;
+                        text-align: center;
+                    }
+
+                #sidebar .section-label {
+                    padding: 0.75rem 1rem 0.25rem;
+                    font-size: 0.7rem;
+                    text-transform: uppercase;
+                    letter-spacing: 0.05em;
+                    color: rgba(255,255,255,0.4);
+                }
+
+            #sidebarToggle {
+                background: none;
+                border: none;
+                color: #fff;
+                cursor: pointer;
+                font-size: 1.1rem;
+            }
+
+            #mainContent {
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                min-width: 0;
+            }
+
+            #topbar {
+                border-bottom: 1px solid #dee2e6;
+                padding: 0.75rem 1.25rem;
+                background: #fff;
+            }
+    </style>
+</head>
+<body>
+
+    <nav id="sidebar">
+        <div class="sidebar-header">
+            <span class="brand-text">Tutor_Manager</span>
+            <button id="sidebarToggle" title="Toggle sidebar">
+                <i class="bi bi-list"></i>
+            </button>
+        </div>
+
+        <div class="flex-grow-1 py-2">
+            <a class="nav-link" asp-controller="Home" asp-action="Index" data-bs-toggle="tooltip" data-bs-placement="right" title="Home">
+                <i class="bi bi-house-door"></i> <span class="nav-label">Home</span>
+            </a>
+
+            @if (User.Identity != null && User.Identity.IsAuthenticated)
+            {
+                @if (User.IsInRole("Admin"))
+                {
+                    <a class="nav-link" asp-controller="Admin" asp-action="Dashboard" data-bs-toggle="tooltip" data-bs-placement="right" title="Dashboard">
+                        <i class="bi bi-speedometer2"></i> <span class="nav-label">Dashboard</span>
+                    </a>
+                    <div class="section-label">Admin</div>
+                    <a class="nav-link" asp-controller="AdminTutorApplication" asp-action="Index" data-bs-toggle="tooltip" data-bs-placement="right" title="Tutor Applications">
+                        <i class="bi bi-person-check"></i> <span class="nav-label">Tutor Applications</span>
+                    </a>
+                    <a class="nav-link" asp-controller="AdminManagement" asp-action="Index" data-bs-toggle="tooltip" data-bs-placement="right" title="Manage Admins">
+                        <i class="bi bi-person-badge"></i> <span class="nav-label">Manage Admins</span>
+                    </a>
+                }
+
+                @if (User.IsInRole("Tutor"))
+                {
+                    @if (!User.IsInRole("Admin"))
+                    {
+                        <a class="nav-link" asp-controller="Tutors" asp-action="Dashboard" data-bs-toggle="tooltip" data-bs-placement="right" title="Dashboard">
+                            <i class="bi bi-speedometer2"></i> <span class="nav-label">Dashboard</span>
+                        </a>
+                    }
+                    <div class="section-label">Tutor</div>
+                    <a class="nav-link" asp-controller="Tutors" asp-action="Dashboard" data-bs-toggle="tooltip" data-bs-placement="right" title="My Tutor Profile">
+                        <i class="bi bi-mortarboard"></i> <span class="nav-label">My Tutor Profile</span>
+                    </a>
+                    <a class="nav-link" asp-controller="Session" asp-action="Index" data-bs-toggle="tooltip" data-bs-placement="right" title="Sessions">
+                        <i class="bi bi-calendar-check"></i> <span class="nav-label">Sessions</span>
+                    </a>
+                }
+
+                @if (User.IsInRole("Parent"))
+                {
+                    <a class="nav-link" asp-controller="Parents" asp-action="Dashboard" data-bs-toggle="tooltip" data-bs-placement="right" title="Dashboard">
+                        <i class="bi bi-speedometer2"></i> <span class="nav-label">Dashboard</span>
+                    </a>
+                }
+
+                @if (User.IsInRole("Learner"))
+                {
+                    <a class="nav-link" asp-controller="Learners" asp-action="Dashboard" data-bs-toggle="tooltip" data-bs-placement="right" title="Dashboard">
+                        <i class="bi bi-speedometer2"></i> <span class="nav-label">Dashboard</span>
+                    </a>
+                    <a class="nav-link" asp-controller="Session" asp-action="Index" data-bs-toggle="tooltip" data-bs-placement="right" title="My Sessions">
+                        <i class="bi bi-calendar-check"></i> <span class="nav-label">My Sessions</span>
+                    </a>
+                }
+            }
+            else
+            {
+                <div class="section-label">Account</div>
+                <a class="nav-link" asp-controller="Home" asp-action="RegisterLearner" data-bs-toggle="tooltip" data-bs-placement="right" title="Learner Register">
+                    <i class="bi bi-person-plus"></i> <span class="nav-label">Learner Register</span>
+                </a>
+                <a class="nav-link" asp-controller="TutorApplication" asp-action="PersonalInfo" data-bs-toggle="tooltip" data-bs-placement="right" title="Apply to Tutor">
+                    <i class="bi bi-mortarboard"></i> <span class="nav-label">Apply to Tutor</span>
+                </a>
+                <a class="nav-link" asp-controller="Home" asp-action="Login" data-bs-toggle="tooltip" data-bs-placement="right" title="Log In">
+                    <i class="bi bi-box-arrow-in-right"></i> <span class="nav-label">Log In</span>
+                </a>
+            }
+        </div>
+
+        <div class="border-top border-secondary py-2">
+            @if (User.Identity != null && User.Identity.IsAuthenticated)
+            {
+                <form asp-controller="Home" asp-action="Logout" method="post" class="m-0">
+                    <button type="submit" class="nav-link border-0 bg-transparent w-100 text-start" data-bs-toggle="tooltip" data-bs-placement="right" title="Log Out">
+                        <i class="bi bi-box-arrow-right"></i> <span class="nav-label">Log Out</span>
+                    </button>
+                </form>
+            }
+        </div>
+    </nav>
+
+    <div id="mainContent">
+        <div id="topbar" class="d-flex justify-content-between align-items-center">
+            <span class="text-muted small">@ViewData["Title"]</span>
+            @if (User.Identity != null && User.Identity.IsAuthenticated)
+            {
+                <span class="text-muted small">Signed in as @User.Identity.Name</span>
+            }
+        </div>
+
+        <div class="container-fluid py-3">
+            <main role="main" class="pb-3">
+                @RenderBody()
+            </main>
+        </div>
+
+        <footer class="border-top footer text-muted mt-auto">
+            <div class="container-fluid py-2">
+                &copy; 2026 - Tutor_Manager - <a asp-controller="Home" asp-action="Privacy">Privacy</a>
+            </div>
+        </footer>
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+
+    <script>
+            const sidebar = document.getElementById("sidebar");
+            const toggleBtn = document.getElementById("sidebarToggle");
+
+            if (localStorage.getItem("sidebarCollapsed") === "true") {
+                sidebar.classList.add("collapsed");
+            }
+
+            toggleBtn.addEventListener("click", function() {
+                sidebar.classList.toggle("collapsed");
+                localStorage.setItem("sidebarCollapsed", sidebar.classList.contains("collapsed"));
+            });
+
+            document.addEventListener("DOMContentLoaded", function() {
+                const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+                [...tooltipTriggerList].map(el => new bootstrap.Tooltip(el));
+            });
+    </script>
+
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

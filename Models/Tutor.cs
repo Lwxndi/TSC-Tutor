@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Tutor_Manager.Models.Enums;
 
 namespace Tutor_Manager.Models
 {
@@ -24,6 +25,19 @@ namespace Tutor_Manager.Models
 
         public DateTime? DateApproved { get; set; }
 
+
+
+     
+        [Required]
+        public AccountStatus AccountStatus { get; set; } = AccountStatus.NotCreated;
+
+        // Operational identifier, parallel to Learner's TSCxxxxxxxx pattern.
+        // Generated at approval, when the Tutor record is created (not at activation).
+        [StringLength(20)]
+        public string? TutorNumber { get; set; }
+
         public ICollection<TutorSubject> SubjectsTaught { get; set; } = new List<TutorSubject>();
+
+      
     }
 }

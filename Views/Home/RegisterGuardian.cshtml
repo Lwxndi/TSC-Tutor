@@ -1,0 +1,129 @@
+﻿@model Tutor_Manager.ViewModels.RegisterGuardianViewModel
+@using Tutor_Manager.Models
+@{
+    ViewData["Title"] = "Register - Guardian";
+    Layout = null; // 
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Register as a Parent/Guardian - The Science Community</title>
+
+    <link rel="stylesheet" href="~/css/auth-register.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+</head>
+<body>
+
+    <canvas id="molecule-canvas"></canvas>
+
+    <div class="auth-page">
+        <div class="auth-card">
+
+            <div class="card-header-flex">
+                <div class="auth-title">Create account</div>
+                <div class="step-indicator">Step 1 / 1</div>
+            </div>
+
+            <div class="auth-subtitle">Tell us about yourself</div>
+
+            <div class="step-progress-bar">
+                <div class="progress-fill" style="width: 100%;"></div>
+            </div>
+
+            <div class="role-selector">
+                <button type="button" class="role-btn" onclick="window.location.href='/Home/RegisterLearner'">
+                    <i class="bi bi-mortarboard-fill" style="font-size: 1.2rem;"></i> Student
+                </button>
+                <button type="button" class="role-btn active">
+                    <i class="bi bi-person-fill" style="font-size: 1.2rem;"></i> Parent
+                </button>
+                <button type="button" class="role-btn" onclick="window.location.href='/Home/RegisterTutor'">
+                    <i class="bi bi-journal-bookmark-fill" style="font-size: 1.2rem;"></i> Tutor
+                </button>
+            </div>
+
+            <form asp-controller="Home" asp-action="RegisterGuardian" method="post" novalidate>
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-2"></div>
+
+                <div class="auth-row">
+                    <div class="auth-field">
+                        <label asp-for="FirstName">First name</label>
+                        <input asp-for="FirstName" type="text" placeholder="e.g. Thandi" autocomplete="given-name" />
+                        <span asp-validation-for="FirstName" class="text-danger"></span>
+                    </div>
+                    <div class="auth-field">
+                        <label asp-for="LastName">Last name</label>
+                        <input asp-for="LastName" type="text" placeholder="e.g. Nkosi" autocomplete="family-name" />
+                        <span asp-validation-for="LastName" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="auth-field">
+                    <label asp-for="Email">Email address</label>
+                    <input asp-for="Email" type="email" placeholder="thandi@example.com" autocomplete="email" />
+                    <span asp-validation-for="Email" class="text-danger"></span>
+                </div>
+
+                <div class="auth-row">
+                    <div class="auth-field">
+                        <label asp-for="PhoneNumber">Phone number</label>
+                        <input asp-for="PhoneNumber" type="tel" placeholder="+27 71 234 5678" autocomplete="tel" />
+                        <span class="field-hint">Use the same number your child gave during their registration, if possible.</span>
+                        <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+                    </div>
+                    <div class="auth-field">
+                        <label asp-for="AltPhoneNumber">Alt. phone <span style="font-weight:400;">(optional)</span></label>
+                        <input asp-for="AltPhoneNumber" type="tel" autocomplete="tel" />
+                        <span asp-validation-for="AltPhoneNumber" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="section-divider">Account security</div>
+
+                <div class="auth-row">
+                    <div class="auth-field">
+                        <label asp-for="Password">Password</label>
+                        <input asp-for="Password" autocomplete="new-password" />
+                        <span asp-validation-for="Password" class="text-danger"></span>
+                    </div>
+                    <div class="auth-field">
+                        <label asp-for="ConfirmPassword">Confirm password</label>
+                        <input asp-for="ConfirmPassword" autocomplete="new-password" />
+                        <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+                    </div>
+                </div>
+                <span class="field-hint" style="margin-top: -10px; margin-bottom: 15px;">
+                    At least 8 characters, with an uppercase, lowercase, number, and special character.
+                </span>
+
+                <div class="section-divider">Link to your child</div>
+
+                <div class="auth-field">
+                    <label asp-for="LearnerTscNumber">Learner's TSC number</label>
+                    <input asp-for="LearnerTscNumber" type="text" placeholder="e.g. TSC20260001" style="text-transform: uppercase;" />
+                    <span class="field-hint">Your child received this number when they registered. Don't have it? You can still create your account and link later from your dashboard.</span>
+                    <span asp-validation-for="LearnerTscNumber" class="text-danger"></span>
+                </div>
+
+                <div class="auth-field">
+                    <label asp-for="RelationshipToLearner">Relationship <span style="font-weight:400;">(optional)</span></label>
+                    <input asp-for="RelationshipToLearner" type="text" placeholder="e.g. Mother, Father, Guardian" />
+                    <span asp-validation-for="RelationshipToLearner" class="text-danger"></span>
+                </div>
+
+                <button type="submit" class="btn-auth">Create Account</button>
+            </form>
+
+            <div class="auth-footer-link">
+                Already have an account? <a asp-controller="Home" asp-action="Login">Log in</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="~/js/molecules.js"></script>
+    <partial name="_ValidationScriptsPartial" />
+</body>
+</html>

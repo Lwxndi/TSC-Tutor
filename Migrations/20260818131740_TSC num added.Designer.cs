@@ -11,8 +11,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Tutor_Manager.Migrations
 {
     [DbContext(typeof(Tutor_ManagerDatabaseContext))]
-    [Migration("20260809152110_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20260818131740_TSC num added")]
+    partial class TSCnumadded
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -43,12 +43,16 @@ namespace Tutor_Manager.Migrations
                     b.Property<int>("UserId")
                         .HasColumnType("int");
 
-                    b.Property<byte?>("GradeLevel")
-                        .HasColumnType("tinyint");
+                    b.Property<int?>("GradeLevel")
+                        .HasColumnType("int");
 
                     b.Property<string>("SchoolName")
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("TscNumber")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("UserId");
 
@@ -290,7 +294,7 @@ namespace Tutor_Manager.Migrations
             modelBuilder.Entity("Tutor_Manager.Models.LearnerSubject", b =>
                 {
                     b.HasOne("Tutor_Manager.Models.Learner", "Learner")
-                        .WithMany()
+                        .WithMany("Subjects")
                         .HasForeignKey("LearnerUserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -369,6 +373,8 @@ namespace Tutor_Manager.Migrations
             modelBuilder.Entity("Tutor_Manager.Models.Learner", b =>
                 {
                     b.Navigation("Guardians");
+
+                    b.Navigation("Subjects");
                 });
 
             modelBuilder.Entity("Tutor_Manager.Models.Parent", b =>

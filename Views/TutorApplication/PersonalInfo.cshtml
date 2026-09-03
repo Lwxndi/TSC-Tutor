@@ -1,0 +1,117 @@
+﻿@model Tutor_Manager.ViewModels.TutorApplication.TutorApplicationPersonalInfoViewModel
+
+@{
+    ViewData["Title"] = "Tutor Application — Personal Information";
+}
+
+<div class="container py-4" style="max-width: 700px;">
+    <h2 class="mb-1">Apply to Become a Tutor</h2>
+    <p class="text-muted mb-4">Tell us a bit about yourself.</p>
+
+    @await Html.PartialAsync("_StepProgress", (1, Model.ReferenceNumber ?? string.Empty))
+
+    <form asp-controller="TutorApplication" asp-action="PersonalInfo" method="post">
+        <input type="hidden" asp-for="ApplicationId" />
+        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label asp-for="FirstName" class="form-label"></label>
+                <input asp-for="FirstName" class="form-control" />
+                <span asp-validation-for="FirstName" class="text-danger small"></span>
+            </div>
+            <div class="col-md-6">
+                <label asp-for="Surname" class="form-label"></label>
+                <input asp-for="Surname" class="form-control" />
+                <span asp-validation-for="Surname" class="text-danger small"></span>
+            </div>
+
+            <div class="col-md-6">
+                <label asp-for="Email" class="form-label"></label>
+                <input asp-for="Email" class="form-control" type="email" />
+                <span asp-validation-for="Email" class="text-danger small"></span>
+            </div>
+            <div class="col-md-6">
+                <label asp-for="Phone" class="form-label">Phone Number</label>
+                <input asp-for="Phone" class="form-control" />
+                <span asp-validation-for="Phone" class="text-danger small"></span>
+            </div>
+
+            <div class="col-md-6">
+                <label asp-for="AltPhone" class="form-label">Alternative Contact Number (optional)</label>
+                <input asp-for="AltPhone" class="form-control" />
+                <span asp-validation-for="AltPhone" class="text-danger small"></span>
+            </div>
+            <div class="col-md-6">
+                <label asp-for="LocationPreference" class="form-label"></label>
+                <select asp-for="LocationPreference" class="form-select"
+                        asp-items="Html.GetEnumSelectList<Tutor_Manager.Models.Enums.LocationPreference>()">
+                    <option value="">-- Select a location --</option>
+                </select>
+                <span asp-validation-for="LocationPreference" class="text-danger small"></span>
+            </div>
+
+            <div class="col-md-6">
+                <label asp-for="AreaCity" class="form-label">Area / City</label>
+                <select asp-for="AreaCity" class="form-select">
+                    <option value="">-- Select --</option>
+                    <option value="Cape Town">Cape Town</option>
+                    <option value="Mbombela">Mbombela</option>
+                </select>
+                <span asp-validation-for="AreaCity" class="text-danger small"></span>
+            </div>
+        </div>
+
+        <div class="d-flex justify-content-end mt-4">
+            <button type="submit" class="btn btn-primary">Next: Academic Information</button>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        const knownAreas = {
+            CapeTown: ["cape town", "claremont", "rondebosch", "wynberg", "bellville",
+                       "goodwood", "parow", "durbanville", "milnerton", "table view",
+                       "mitchells plain", "khayelitsha", "kuils river", "brackenfell",
+                       "kraaifontein", "century city", "sea point", "observatory",
+                       "athlone", "mowbray"],
+            Mbombela: ["mbombela", "nelspruit", "white river", "hazyview", "kanyamazane",
+                       "kabokweni", "matsulu", "sonheuwel", "west acres", "riverside"]
+        };
+
+        function checkAreaDistance() {
+            const location = document.getElementById("LocationPreference").value;
+            const areaInput = document.getElementById("AreaCity").value.trim().toLowerCase();
+            const warningEl = document.getElementById("areaWarning");
+
+            if (!location || !areaInput || location === "Remote") {
+                warningEl.classList.add("d-none");
+                return;
+            }
+
+            const list = knownAreas[location];
+            if (!list) {
+                warningEl.classList.add("d-none");
+                return;
+            }
+
+            const isKnown = list.some(known => areaInput.includes(known) || known.includes(areaInput));
+
+            if (isKnown) {
+                warningEl.classList.add("d-none");
+            } else {
+                warningEl.classList.remove("d-none");
+            }
+        }
+
+        document.getElementById("AreaCity").addEventListener("blur", checkAreaDistance);
+        document.getElementById("LocationPreference").addEventListener("change", checkAreaDistance);
+        document.getElementById("LocationPreference").addEventListener("change", function() {
+            const areaField = document.getElementById("AreaCity").closest(".col-md-6");
+            areaField.style.display = this.value === "Remote" ? "none" : "";
+        });
+    </script>
+}

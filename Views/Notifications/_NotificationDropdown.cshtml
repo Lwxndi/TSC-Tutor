@@ -1,0 +1,20 @@
+﻿@* Views/Notifications/_NotificationDropdown.cshtml *@
+@model List<Tutor_Manager.Models.Notification>
+
+<div class="notif-dropdown">
+    @if (!Model.Any())
+    {
+        <div class="notif-empty">No notifications yet.</div>
+    }
+    else
+    {
+        foreach (var n in Model)
+        {
+            <div class="notif-item @(n.IsRead ? "" : "unread")" data-id="@n.NotificationId">
+                <div class="notif-title">@n.Title</div>
+                <div class="notif-message">@n.Message</div>
+                <div class="notif-time">@n.DateCreated.ToString("dd MMM, HH:mm")</div>
+            </div>
+        }
+    }
+</div>
