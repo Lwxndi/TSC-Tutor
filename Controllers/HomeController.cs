@@ -229,29 +229,6 @@ namespace Tutor_Manager.Controllers
         //        Role = "Guardian" // match however you're storing roles right now
         //    });
 
-        //    var learner = await _context.Learners
-        //        .FirstOrDefaultAsync(l => l.TscNumber == model.LearnerTscNumber);
-
-        //    if (learner != null)
-        //    {
-        //        _context.LearnerGuardians.Add(new LearnerGuardian
-        //        {
-        //            LearnerId = learner.UserId,
-        //            GuardianId = guardian.UserId
-        //        });
-        //    }
-        //    // no match -> guardian account still gets created, just unlinked for now
-
-        //    await _context.SaveChangesAsync();
-
-        //    TempData["LinkStatus"] = learner != null
-        //        ? "Your account has been linked to your child's profile."
-        //        : "We couldn't find a learner with that TSC number. You can try linking again from your dashboard.";
-
-        //    return RedirectToAction("Login");
-        //}
-
-        // GET: /Home/Login for all users
         [HttpGet]
         public IActionResult Login()
         {
