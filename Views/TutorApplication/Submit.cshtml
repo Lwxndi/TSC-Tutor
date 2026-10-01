@@ -1,68 +1,4 @@
-﻿@* @model Tutor_Manager.ViewModels.TutorApplication.TutorApplicationSubmitViewModel
-
-@{
-    ViewData["Title"] = "Tutor Application — Submit";
-}
-
-<div class="container py-4" style="max-width: 700px;">
-    <h2 class="mb-1">Final Step</h2>
-    <p class="text-muted mb-4">Please confirm below to submit your application.</p>
-
-    @await Html.PartialAsync("_StepProgress", (8, string.Empty))
-
-    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
-
-    <form asp-controller="TutorApplication" asp-action="Submit" method="post">
-        <input type="hidden" asp-for="ApplicationId" />
-        <input type="hidden" asp-for="ConsentVersion" value="1.0" />
-
-        <div class="card mb-4">
-            <div class="card-body">
-                <div class="form-check">
-                    <input type="checkbox" class="form-check-input" asp-for="ConsentGiven" />
-                    <label class="form-check-label" asp-for="ConsentGiven">
-                        I consent to The Science Community collecting and processing the personal
-                        information and supporting documents provided in this application for the
-                        purpose of evaluating my application to become a tutor.
-                    </label>
-                </div>
-                <span asp-validation-for="ConsentGiven" class="text-danger small d-block mt-2"></span>
-            </div>
-        </div>
-
-        <div class="alert alert-info">
-            Are you sure all the information you've provided is correct? You can still go back and
-            edit your application before submitting.
-        </div>
-
-        <div class="d-flex justify-content-between mt-4">
-            <a asp-action="Review" asp-route-id="@Model.ApplicationId" class="btn btn-outline-secondary">Back to Review</a>
-            <button type="submit" class="btn btn-success">Confirm & Submit Application</button>
-        </div>
-    </form>
-</div>
-
-@section Scripts {
-    <partial name="_ValidationScriptsPartial" />
-    <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            const consentCheckbox = document.getElementById("ConsentGiven");
-            const errorSpan = document.querySelector('span[data-valmsg-for="ConsentGiven"]');
-
-            if (consentCheckbox && errorSpan) {
-                consentCheckbox.addEventListener("change", function () {
-                    if (this.checked) {
-                        errorSpan.textContent = "";
-                        errorSpan.classList.remove("field-validation-error");
-                    }
-                });
-            }
-        });
-    </script>
-} *@
-
-
-@model Tutor_Manager.ViewModels.TutorApplication.TutorApplicationSubmitViewModel
+﻿@model Tutor_Manager.ViewModels.TutorApplication.TutorApplicationSubmitViewModel
 
 @{
     ViewData["Title"] = "Tutor Application — Submit";
@@ -102,14 +38,14 @@
             </div>
         </div>
 
-        <div class="alert alert-info">
+        <div class="alert" style="background-color: var(--paper); border: 1px solid var(--paper-2); border-left: 4px solid var(--hi-deep); color: var(--ink);">
             Are you sure all the information you've provided is correct? You can still go back and
             edit your application before submitting.
         </div>
 
         <div class="d-flex justify-content-between mt-4">
             <a asp-action="Review" asp-route-id="@Model.ApplicationId" class="btn btn-outline-secondary">Back to Review</a>
-            <button type="submit" class="btn btn-success">Confirm & Submit Application</button>
+            <button type="submit" class="btn btn-primary">Confirm & Submit Application</button>
         </div>
     </form>
 </div>

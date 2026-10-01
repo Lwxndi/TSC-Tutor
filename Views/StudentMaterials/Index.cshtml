@@ -1,0 +1,49 @@
+﻿@* Views/StudyMaterial/Index.cshtml *@
+@model List<Tutor_Manager.Models.StudyMaterial>
+
+@{
+    ViewData["Title"] = "My Study Material";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>My Study Material</h2>
+        <a asp-controller="StudyMaterial" asp-action="Upload" class="btn btn-primary">Upload New Material</a>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+    }
+
+    @if (!Model.Any())
+    {
+        <p class="text-muted">You haven't uploaded any study material yet.</p>
+    }
+    else
+    {
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Subject</th>
+                    <th>Topic / Chapter</th>
+                    <th>Files</th>
+                    <th>Uploaded</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var material in Model)
+                {
+                    <tr>
+                        <td>@material.Title</td>
+                        <td>@material.Subject.SubjectName</td>
+                        <td>@material.TopicChapterLabel</td>
+                        <td>@material.Files.Count file(s)</td>
+                        <td>@material.UploadedAt.ToLocalTime().ToString("dd MMM yyyy, HH:mm")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</div>

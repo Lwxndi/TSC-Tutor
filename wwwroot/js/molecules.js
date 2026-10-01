@@ -35,9 +35,9 @@
         draw() {
             ctx.beginPath();
             ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-            ctx.fillStyle = "rgba(255, 255, 255, 0.7)";
+            ctx.fillStyle = "rgba(169, 131, 90, 0.75)";
             ctx.shadowBlur = 8;
-            ctx.shadowColor = "rgba(255, 255, 255, 0.5)";
+            ctx.shadowColor = "rgba(169, 131, 90, 0.5)";
             ctx.fill();
             ctx.shadowBlur = 0;
         }
@@ -63,7 +63,7 @@
                     ctx.beginPath();
                     ctx.moveTo(particles[i].x, particles[i].y);
                     ctx.lineTo(particles[j].x, particles[j].y);
-                    ctx.strokeStyle = `rgba(255, 255, 255, ${0.18 * (1 - dist / 130)})`;
+                    ctx.strokeStyle = `rgba(169, 131, 90, ${0.16 * (1 - dist / 130)})`;
                     ctx.lineWidth = 1;
                     ctx.stroke();
                 }

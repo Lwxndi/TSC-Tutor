@@ -140,6 +140,8 @@ namespace Tutor_Manager.Controllers
                 .Where(p => !string.IsNullOrWhiteSpace(p))
                 .ToList();
 
+            var linkedGuardianUserIds = new List<int>(); // NEW
+
             bool isFirstGuardian = true;
             foreach (var phone in guardianPhones)
             {
@@ -166,6 +168,8 @@ namespace Tutor_Manager.Controllers
                         RelationshipToLearner = model.GuardianRelationship,
                         IsPrimaryContact = isFirstGuardian
                     });
+
+                    linkedGuardianUserIds.Add(guardianUser.UserId); // NEW
                 }
 
                 isFirstGuardian = false;
@@ -173,7 +177,7 @@ namespace Tutor_Manager.Controllers
 
             var year = DateTime.Now.Year;
             var nextNumber = _context.Learners.Count() + 1;
-            learner.TscNumber = $"TSC{year}{nextNumber:D4}"; // TSC20260001
+            learner.TscNumber = $"TSC{year}{nextNumber:D4}".Trim().ToUpperInvariant(); // TSC20260001
 
             _context.Learners.Add(learner);
             await _context.SaveChangesAsync();
@@ -183,51 +187,139 @@ namespace Tutor_Manager.Controllers
                 { "FirstName", newUser.FirstName },
                 { "TscNumber", learner.TscNumber }
             });
-                        await _emailService.SendAsync(message);
+            await _emailService.SendAsync(message);
 
+            // NEW — notify any guardian who was matched and linked during registration
+            foreach (var guardianUserId in linkedGuardianUserIds)
+            {
+                var notifData = new Dictionary<string, string>
+        {
+            { "LearnerName", $"{newUser.FirstName} {newUser.LastName}" },
+            { "TscNumber", learner.TscNumber }
+        };
+                await _notifications.SendAsync(guardianUserId, NotificationType.GuardianLinked, notifData);
+            }
 
             TempData["SuccessMessage"] = "Registration successful! You can now log in.";
             return RedirectToAction("Dashboard", "Learners");
         }
 
-
-        [HttpGet]
-        public IActionResult RegisterGuardian()
-        {
-            return View(new RegisterGuardianViewModel());
-        }
-
+        // POST: /Home/RegisterLearner
         //[HttpPost]
-        //public async Task<IActionResult> RegisterGuardian(RegisterGuardianViewModel model)
+        //[ValidateAntiForgeryToken]
+        //public async Task<IActionResult> RegisterLearner(RegisterLearnerViewModel model)
         //{
         //    if (!ModelState.IsValid)
+        //    {
+        //        // AvailableSubjects round-trips through the hidden fields on POST,
+        //        // so there's no need to re-query it before redisplaying the form.
         //        return View(model);
+        //    }
 
+        //    // The database enforces a unique Email index, but checking here first
+        //    // gives a friendly validation error instead of a raw SQL exception.
         //    if (await _context.Users.AnyAsync(u => u.Email == model.Email))
         //    {
         //        ModelState.AddModelError(nameof(model.Email), "An account with this email already exists.");
         //        return View(model);
         //    }
 
-        //    var user = new User
+        //    var newUser = new User
         //    {
-        //        FirstName = model.Name,
-        //        LastName = model.Surname,
+        //        FirstName = model.FirstName,
+        //        LastName = model.LastName,
         //        Email = model.Email,
         //        PhoneNumber = model.PhoneNumber,
-        //        PasswordHash = string.Empty 
+        //        AltPhoneNumber = model.AltPhoneNumber,
+        //        Gender = model.Gender,
+        //        PasswordHash = string.Empty // placeholder, set below once we can hash against this instance
         //    };
-        //    _context.Users.Add(user);
-        //    await _context.SaveChangesAsync(); // need UserId generated before linking below
+        //    newUser.PasswordHash = _passwordHasher.HashPassword(newUser, model.Password);
 
-        //    var guardian = new Parent { UserId = user.UserId };
-        //    _context.Parents.Add(guardian);
-
-        //    _context.UserRoles.Add(new UserRole
+        //    var learnerRole = await _context.Roles.FirstOrDefaultAsync(r => r.RoleName == "Learner");
+        //    if (learnerRole == null)
         //    {
-        //        UserId = user.UserId,
-        //        Role = "Guardian" // match however you're storing roles right now
+        //        // Roles table needs to be seeded (Tutor/Learner/Parent/Admin) - see note below.
+        //        ModelState.AddModelError(string.Empty, "Registration is temporarily unavailable. Please contact support.");
+        //        return View(model);
+        //    }
+
+        //    newUser.UserRoles.Add(new UserRole { Role = learnerRole });
+
+        //    var learner = new Learner
+        //    {
+        //        User = newUser,
+        //        GradeLevel = model.GradeLevel,
+        //        SchoolName = model.SchoolName,
+        //        TscNumber = $"TSC{DateTime.Now.Year}{(_context.Learners.Count() + 1):D4}"
+        //    };
+
+        //    foreach (var subject in model.AvailableSubjects.Where(s => s.IsSelected))
+        //    {
+        //        learner.Subjects.Add(new LearnerSubject { SubjectId = subject.SubjectId });
+        //    }
+
+        //    // Link guardians by phone number. A number that doesn't match an existing
+        //    // account is currently just skipped - nothing gets created for it.
+        //    // Real gap to decide on: should an unmatched number create a placeholder
+        //    // Parent account, trigger an invite, or block registration entirely?
+        //    var guardianPhones = new[] { model.GuardianPhoneNumber1, model.GuardianPhoneNumber2, model.GuardianPhoneNumber3 }
+        //        .Where(p => !string.IsNullOrWhiteSpace(p))
+        //        .ToList();
+
+        //    bool isFirstGuardian = true;
+        //    foreach (var phone in guardianPhones)
+        //    {
+        //        var guardianUser = await _context.Users
+        //            .Include(u => u.Parent)
+        //            .FirstOrDefaultAsync(u => u.PhoneNumber == phone);
+
+        //        if (guardianUser != null)
+        //        {
+        //            if (guardianUser.Parent == null)
+        //            {
+        //                guardianUser.Parent = new Parent { UserId = guardianUser.UserId };
+
+        //                var parentRole = await _context.Roles.FirstOrDefaultAsync(r => r.RoleName == "Parent");
+        //                if (parentRole != null)
+        //                {
+        //                    guardianUser.UserRoles.Add(new UserRole { RoleId = parentRole.RoleId, UserId = guardianUser.UserId });
+        //                }
+        //            }
+
+        //            learner.Guardians.Add(new LearnerGuardian
+        //            {
+        //                Parent = guardianUser.Parent,
+        //                RelationshipToLearner = model.GuardianRelationship,
+        //                IsPrimaryContact = isFirstGuardian
+        //            });
+        //        }
+
+        //        isFirstGuardian = false;
+        //    }
+
+        //    var year = DateTime.Now.Year;
+        //    var nextNumber = _context.Learners.Count() + 1;
+        //    learner.TscNumber = $"TSC{year}{nextNumber:D4}".Trim().ToUpperInvariant();// TSC20260001
+
+        //    _context.Learners.Add(learner);
+        //    await _context.SaveChangesAsync();
+
+        //    var message = _templates.Build(EmailType.RegistrationConfirmation, newUser.Email, new Dictionary<string, string>
+        //    {
+        //        { "FirstName", newUser.FirstName },
+        //        { "TscNumber", learner.TscNumber }
         //    });
+        //                await _emailService.SendAsync(message);
+
+
+        //    TempData["SuccessMessage"] = "Registration successful! You can now log in.";
+        //    return RedirectToAction("Dashboard", "Learners");
+        //}
+
+
+
+
 
         [HttpGet]
         public IActionResult Login()
@@ -326,6 +418,8 @@ namespace Tutor_Manager.Controllers
             });
         }
 
+
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> RegisterGuardian(RegisterGuardianViewModel model)
@@ -363,9 +457,10 @@ namespace Tutor_Manager.Controllers
 
             var parent = new Parent { User = newUser };
 
+            var normalizedTsc = model.LearnerTscNumber?.Trim().ToUpperInvariant();
             var learner = await _context.Learners
                 .Include(l => l.User)
-                .FirstOrDefaultAsync(l => l.TscNumber == model.LearnerTscNumber);
+                .FirstOrDefaultAsync(l => l.TscNumber == normalizedTsc);
 
             if (learner != null)
             {
@@ -384,16 +479,22 @@ namespace Tutor_Manager.Controllers
             var notifType = learner != null ? NotificationType.GuardianLinked : NotificationType.GuardianUnlinked;
 
             var data = new Dictionary<string, string>
-    {
-        { "FirstName", newUser.FirstName },
-        { "GuardianName", $"{newUser.FirstName} {newUser.LastName}" },
-        { "LearnerName", learner != null ? $"{learner.User.FirstName} {learner.User.LastName}" : "" },
-        { "TscNumber", model.LearnerTscNumber ?? "" }
-    };
+            {
+                { "FirstName", newUser.FirstName },
+                { "GuardianName", $"{newUser.FirstName} {newUser.LastName}" },
+                { "LearnerName", learner != null ? $"{learner.User.FirstName} {learner.User.LastName}" : "" },
+                { "TscNumber", model.LearnerTscNumber ?? "" }
+            };
 
             var message = _templates.Build(emailType, newUser.Email, data);
             await _emailService.SendAsync(message);
             await _notifications.SendAsync(newUser.UserId, notifType, data);
+
+            // UPDATED — routed through NotificationService instead of a manual admin-role query + loop
+            if (learner == null)
+            {
+                await _notifications.NotifyAdminsAsync(NotificationType.GuardianUnlinked, data);
+            }
 
             TempData["SuccessMessage"] = learner != null
                 ? "Registration successful! Your account has been linked to your child's profile."
@@ -401,6 +502,87 @@ namespace Tutor_Manager.Controllers
 
             return RedirectToAction(nameof(Login));
         }
+
+        //[HttpPost]
+        //[ValidateAntiForgeryToken]
+        //public async Task<IActionResult> RegisterGuardian(RegisterGuardianViewModel model)
+        //{
+        //    if (!ModelState.IsValid)
+        //    {
+        //        return View(model);
+        //    }
+
+        //    if (await _context.Users.AnyAsync(u => u.Email == model.Email))
+        //    {
+        //        ModelState.AddModelError(nameof(model.Email), "An account with this email already exists.");
+        //        return View(model);
+        //    }
+
+        //    var newUser = new User
+        //    {
+        //        FirstName = model.FirstName,
+        //        LastName = model.LastName,
+        //        Email = model.Email,
+        //        PhoneNumber = model.PhoneNumber,
+        //        AltPhoneNumber = model.AltPhoneNumber,
+        //        PasswordHash = string.Empty
+        //    };
+        //    newUser.PasswordHash = _passwordHasher.HashPassword(newUser, model.Password);
+
+        //    var parentRole = await _context.Roles.FirstOrDefaultAsync(r => r.RoleName == "Parent");
+        //    if (parentRole == null)
+        //    {
+        //        ModelState.AddModelError(string.Empty, "Registration is temporarily unavailable. Please contact support.");
+        //        return View(model);
+        //    }
+
+        //    newUser.UserRoles.Add(new UserRole { Role = parentRole });
+
+        //    var parent = new Parent { User = newUser };
+
+        //    //var learner = await _context.Learners
+        //    //    .Include(l => l.User)
+        //    //    .FirstOrDefaultAsync(l => l.TscNumber == model.LearnerTscNumber);
+
+        //    var normalizedTsc = model.LearnerTscNumber?.Trim().ToUpperInvariant();
+        //    var learner = await _context.Learners
+        //        .Include(l => l.User)
+        //        .FirstOrDefaultAsync(l => l.TscNumber == normalizedTsc);
+
+        //    if (learner != null)
+        //    {
+        //        parent.Learners.Add(new LearnerGuardian
+        //        {
+        //            Learner = learner,
+        //            RelationshipToLearner = model.RelationshipToLearner,
+        //            IsPrimaryContact = true
+        //        });
+        //    }
+
+        //    _context.Parents.Add(parent);
+        //    await _context.SaveChangesAsync();
+
+        //    var emailType = learner != null ? EmailType.GuardianLinked : EmailType.GuardianUnlinked;
+        //    var notifType = learner != null ? NotificationType.GuardianLinked : NotificationType.GuardianUnlinked;
+
+        //    var data = new Dictionary<string, string>
+        //    {
+        //        { "FirstName", newUser.FirstName },
+        //        { "GuardianName", $"{newUser.FirstName} {newUser.LastName}" },
+        //        { "LearnerName", learner != null ? $"{learner.User.FirstName} {learner.User.LastName}" : "" },
+        //        { "TscNumber", model.LearnerTscNumber ?? "" }
+        //    };
+
+        //    var message = _templates.Build(emailType, newUser.Email, data);
+        //    await _emailService.SendAsync(message);
+        //    await _notifications.SendAsync(newUser.UserId, notifType, data);
+
+        //    TempData["SuccessMessage"] = learner != null
+        //        ? "Registration successful! Your account has been linked to your child's profile."
+        //        : "Registration successful! We couldn't find a learner with that TSC number - you can try linking again from your dashboard.";
+
+        //    return RedirectToAction(nameof(Login));
+        //}
         // POST: /Home/RegisterGuardian
         //[HttpPost]
         //[ValidateAntiForgeryToken]

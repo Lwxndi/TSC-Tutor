@@ -10,7 +10,9 @@
     {
         foreach (var n in Model)
         {
-            <div class="notif-item @(n.IsRead ? "" : "unread")" data-id="@n.NotificationId">
+            <div class="notif-item @(n.IsRead ? "" : "unread")"
+                 data-id="@n.NotificationId"
+                 data-link="@n.Link">
                 <div class="notif-title">@n.Title</div>
                 <div class="notif-message">@n.Message</div>
                 <div class="notif-time">@n.DateCreated.ToString("dd MMM, HH:mm")</div>

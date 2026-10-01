@@ -1,0 +1,12 @@
+﻿@model Tutor_Manager.Models.Enums.PaymentStatus
+@{
+    var (cls, text) = Model switch
+    {
+        Tutor_Manager.Models.Enums.PaymentStatus.Paid => ("bg-success", "Paid"),
+        Tutor_Manager.Models.Enums.PaymentStatus.Pending => ("bg-warning text-dark", "Pending"),
+        Tutor_Manager.Models.Enums.PaymentStatus.Expired => ("bg-secondary", "Expired"),
+        Tutor_Manager.Models.Enums.PaymentStatus.Failed => ("bg-danger", "Failed"),
+        _ => ("bg-danger", "Needs review")
+    };
+}
+<span class="badge @cls">@text</span>

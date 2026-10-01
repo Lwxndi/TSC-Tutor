@@ -1,0 +1,185 @@
+﻿@model Tutor_Manager.ViewModels.QuizzViewmodels.QuizReviewViewModel
+@using Tutor_Manager.Models
+
+@{
+    ViewData["Title"] = "Review Quiz Questions";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>Review: @Model.QuizTitle</h2>
+        <span class="badge bg-@(Model.Status == QuizGenerationStatus.Confirmed ? "success" : "warning")">@Model.Status</span>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+    }
+
+    @if (Model.Status == QuizGenerationStatus.Confirmed)
+    {
+        <div class="alert alert-info d-flex justify-content-between align-items-center">
+            <span>This quiz has been confirmed. Questions can no longer be edited, added, or removed.</span>
+            <form asp-controller="Quiz" asp-action="Unconfirm" method="post" class="ms-3">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="quizId" value="@Model.QuizId" />
+                <button type="submit" class="btn btn-sm btn-outline-warning">Un-confirm &amp; Edit Again</button>
+            </form>
+        </div>
+    }
+
+    @if (Model.Status == QuizGenerationStatus.Generated)
+    {
+        <a asp-controller="Quiz" asp-action="AddQuestion" asp-route-quizId="@Model.QuizId" class="btn btn-primary mb-3">Add Question</a>
+    }
+
+    @if (!Model.Questions.Any())
+    {
+        <p class="text-muted">No questions yet.</p>
+    }
+    else
+    {
+        <div class="list-group mb-4">
+            @foreach (var q in Model.Questions.OrderBy(q => q.DisplayOrder))
+            {
+                <div class="list-group-item">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div class="flex-grow-1 me-3">
+                            <span class="badge bg-secondary me-2">@q.QuestionType</span>
+                            <span class="badge bg-light text-dark border me-2">@q.Marks mark(s)</span>
+
+                            <div class="mt-2 question-text">@q.QuestionText</div>
+
+                            @if (q.HasImage)
+                            {
+                                <img src="@Url.Action("Image", "QuizImage", new { questionId = q.Id })"
+                                     class="img-fluid rounded border mt-2" style="max-height:320px" alt="Question image" />
+                            }
+
+                            @if (q.QuestionType == QuizQuestionType.MultipleChoiceSingle || q.QuestionType == QuizQuestionType.MultipleChoiceMultiple)
+                            {
+                                <ul class="list-unstyled mt-2 mb-0">
+                                    @foreach (var o in q.Options.OrderBy(o => o.DisplayOrder))
+                                    {
+                                        <li class="question-text @(o.IsCorrect ? "text-success fw-semibold" : "text-muted")">
+                                            <i class="bi @(o.IsCorrect ? "bi-check-circle-fill" : "bi-circle") me-1"></i>@o.OptionText
+                                        </li>
+                                    }
+                                </ul>
+                            }
+                            else if (q.QuestionType == QuizQuestionType.TrueFalse)
+                            {
+                                <div class="mt-2 text-success fw-semibold">
+                                    <i class="bi bi-check-circle-fill me-1"></i>Correct answer: @(q.CorrectBoolAnswer == true ? "True" : "False")
+                                </div>
+                            }
+                            else if (!string.IsNullOrWhiteSpace(q.MarkingGuidance))
+                            {
+                                <div class="mt-2 small text-muted border-start ps-2 question-text">
+                                    <strong>Marking guidance:</strong> @q.MarkingGuidance
+                                </div>
+                            }
+                        </div>
+
+                        @if (Model.Status == QuizGenerationStatus.Generated)
+                        {
+                            <div class="d-flex gap-2">
+                                <a asp-controller="Quiz" asp-action="EditQuestion" asp-route-quizId="@Model.QuizId" asp-route-questionId="@q.Id" class="btn btn-sm btn-outline-secondary">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <button type="button" class="btn btn-sm btn-outline-danger delete-question-btn"
+                                        data-question-id="@q.Id" data-question-text="@q.QuestionText">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+    }
+
+    @if (Model.Status == QuizGenerationStatus.Generated && Model.Questions.Any())
+    {
+        <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#confirmModal">
+            Confirm &amp; Finish Review
+        </button>
+    }
+
+    <a asp-controller="Quiz" asp-action="Index" class="btn btn-secondary ms-2">Back to Quizzes</a>
+</div>
+
+<div class="modal fade" id="deleteQuestionModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Delete Question?</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-danger fw-semibold">This cannot be undone.</p>
+                <p id="deleteQuestionText" class="text-muted"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form id="deleteQuestionForm" asp-controller="Quiz" asp-action="DeleteQuestion" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="quizId" value="@Model.QuizId" />
+                    <input type="hidden" name="questionId" id="deleteQuestionId" value="" />
+                    <button type="submit" class="btn btn-danger">Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="confirmModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirm Quiz?</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Once confirmed, questions can no longer be edited, added, or removed. Make sure you're happy with all @Model.Questions.Count question(s) before continuing.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form asp-controller="Quiz" asp-action="Confirm" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="quizId" value="@Model.QuizId" />
+                    <button type="submit" class="btn btn-success">Confirm</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            renderMathInElement(document.body, {
+                delimiters: [
+                    { left: "$$", right: "$$", display: true },
+                    { left: "$", right: "$", display: false }
+                ]
+            });
+        });
+
+        document.querySelectorAll('.delete-question-btn').forEach(btn => {
+            btn.addEventListener('click', function () {
+                document.getElementById('deleteQuestionId').value = this.dataset.questionId;
+                document.getElementById('deleteQuestionText').textContent = this.dataset.questionText;
+                new bootstrap.Modal(document.getElementById('deleteQuestionModal')).show();
+            });
+        });
+    </script>
+}

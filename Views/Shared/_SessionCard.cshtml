@@ -1,0 +1,59 @@
+﻿@model Tutor_Manager.ViewModels.Sessions.SessionListItemViewModel
+@using Tutor_Manager.Models.Enums
+@{
+    var today = DateTime.Today;
+    var notStarted = Model.Status == SessionStatus.Scheduled || Model.Status == SessionStatus.Rescheduled;
+    var canStart = notStarted && Model.Date.Date <= today;
+    var canCancel = notStarted;
+    var canComplete = Model.Status == SessionStatus.InProgress || (notStarted && Model.Date.Date < today);
+    var canAttend = Model.Status == SessionStatus.InProgress || Model.Status == SessionStatus.Completed;
+    var attendancePending = Model.Status == SessionStatus.Completed && Model.UnmarkedCount > 0;
+    var isRemote = Model.DeliveryMethod == DeliveryMethod.Remote || Model.DeliveryMethod == DeliveryMethod.Hybrid;
+    var hasVenue = Model.DeliveryMethod == DeliveryMethod.Physical || Model.DeliveryMethod == DeliveryMethod.Hybrid;
+}
+<div class="card mb-2">
+    <div class="card-body d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <div>
+            <strong>@Model.Date.ToString("ddd, d MMM") &middot; @Model.StartTime.ToString(@"hh\:mm") – @Model.EndTime.ToString(@"hh\:mm")</strong><br />
+            @Model.SubjectName — Grade @((int)Model.Grade)
+            <span class="badge bg-light text-dark border ms-1">@Model.DeliveryMethod</span>
+            @if (Model.Status == SessionStatus.Rescheduled) { <span class="badge bg-warning text-dark">Rescheduled</span> }
+            @if (Model.Status == SessionStatus.InProgress) { <span class="badge bg-primary">In progress</span> }
+            @if (Model.Status == SessionStatus.Completed) { <span class="badge bg-success">Completed</span> }
+            @if (attendancePending) { <span class="badge bg-warning text-dark">Attendance pending (@Model.UnmarkedCount)</span> }
+            @if (isRemote && !string.IsNullOrEmpty(Model.JitsiLink))
+            {
+                <br /><a href="@Model.JitsiLink" target="_blank" rel="noopener">Join meeting</a>
+            }
+            @if (hasVenue && !string.IsNullOrEmpty(Model.Venue))
+            {
+                <br /><span class="text-muted small"><i class="bi bi-geo-alt"></i> @Model.Venue</span>
+            }
+        </div>
+        <div class="d-flex gap-1">
+            @if (canStart)
+            {
+                <form asp-action="Start" method="post" class="d-inline">
+                    <input type="hidden" name="sessionId" value="@Model.SessionId" />
+                    <button type="submit" class="btn btn-sm btn-primary">Start</button>
+                </form>
+            }
+            @if (canAttend)
+            {
+                <a asp-action="Attendance" asp-route-sessionId="@Model.SessionId"
+                   class="btn btn-sm @(attendancePending || Model.Status == SessionStatus.InProgress ? "btn-warning" : "btn-outline-secondary")">
+                    <i class="bi bi-calendar-check"></i> Attendance
+                </a>
+            }
+            @if (canComplete)
+            {
+                <a asp-action="Complete" asp-route-sessionId="@Model.SessionId" class="btn btn-sm btn-success">Complete</a>
+            }
+            @if (canCancel)
+            {
+                <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal"
+                        data-bs-target="#cancelModal" data-session-id="@Model.SessionId">Cancel</button>
+            }
+        </div>
+    </div>
+</div>

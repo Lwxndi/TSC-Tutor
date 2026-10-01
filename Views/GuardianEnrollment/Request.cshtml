@@ -1,0 +1,182 @@
+﻿@using Microsoft.AspNetCore.Mvc.Rendering
+@using Tutor_Manager.Controllers
+@using Tutor_Manager.Models.Enums
+
+@{
+    ViewData["Title"] = "Request Enrollment";
+    var learners = (List<SelectListItem>)ViewBag.AvailableLearners;
+    var offerings = (List<OfferingRequestRow>)ViewBag.Offerings;
+    var registeredPairs = (List<(int LearnerUserId, int SubjectId)>)ViewBag.RegisteredSubjectPairs;
+}
+
+<div class="container mt-4">
+    <h2>Request Enrollment</h2>
+    <p class="text-muted">Select a learner, then check every offering you'd like to request — you can request more than one subject at once.</p>
+
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+    @if (!learners.Any())
+    {
+        <div class="alert alert-warning">
+            No learners are linked to your account yet. Contact TSC Connect to have your child linked before requesting an enrollment.
+        </div>
+    }
+    else
+    {
+        <form asp-controller="GuardianEnrollment" asp-action="Request" method="post" id="requestForm">
+            @Html.AntiForgeryToken()
+
+            <div class="mb-3">
+                <label class="form-label">Learner</label>
+                <select name="learnerUserId" id="learnerSelect" class="form-select" required>
+                    <option value="">-- Select your learner --</option>
+                    @foreach (var l in learners)
+                    {
+                        <option value="@l.Value">@l.Text</option>
+                    }
+                </select>
+            </div>
+
+            <div id="offeringsContainer" class="mb-3">
+                <p class="text-muted">Select a learner to see available offerings.</p>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Submit Request</button>
+            <a asp-controller="GuardianEnrollment" asp-action="Index" class="btn btn-secondary">Cancel</a>
+        </form>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        // Flat data rendered server-side, grouped/filtered here — same pattern as the
+        // guardian dropdown filtering already used on the Admin Create page.
+        const offerings = [
+            @foreach (var o in offerings)
+            {
+                <text>{
+                    offeringId: @o.OfferingId,
+                    subjectId: @o.SubjectId,
+                    subjectName: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(o.SubjectName)),
+                    grade: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(o.Grade.ToString())),
+                    tutorName: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(o.TutorName)),
+                    deliveryMethod: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(o.DeliveryMethod.ToString()))
+                },</text>
+            }
+        ];
+
+        // (learnerId, subjectId) pairs from LearnerSubject — used only to decide which
+        // subject groups start expanded. Never used to filter an offering out entirely
+        // (spec §1.3 — subject preference at signup is interest, not a commitment, and
+        // a guardian can still request any subject at enrollment time).
+        const registeredPairs = [
+            @foreach (var p in registeredPairs)
+            {
+                <text>{ learnerId: @p.LearnerUserId, subjectId: @p.SubjectId },</text>
+            }
+        ];
+
+        const learnerSelect = document.getElementById('learnerSelect');
+        const offeringsContainer = document.getElementById('offeringsContainer');
+
+        function deliveryControlHtml(offering) {
+            // Spec §11.6 — Physical/Remote have exactly one valid DeliveryMode; shown as
+            // a fixed label, not a choice. Nothing is submitted for these — the server
+            // resolves the correct DeliveryMode itself from the Offering, so there's
+            // nothing here for a tampered request to override.
+            if (offering.deliveryMethod === 'Physical') {
+                return '<span class="badge bg-light text-dark border">In-Person only</span>';
+            }
+            if (offering.deliveryMethod === 'Remote') {
+                return '<span class="badge bg-light text-dark border">Remote only</span>';
+            }
+            // Hybrid — the one case where the guardian's choice is real and required.
+            return `
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="hybridDeliveryMode[${offering.offeringId}]" value="InPerson" id="hyb-${offering.offeringId}-ip" checked />
+                    <label class="form-check-label small" for="hyb-${offering.offeringId}-ip">In-Person</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="hybridDeliveryMode[${offering.offeringId}]" value="Remote" id="hyb-${offering.offeringId}-rem" />
+                    <label class="form-check-label small" for="hyb-${offering.offeringId}-rem">Remote</label>
+                </div>
+            `;
+        }
+
+        function renderOfferings(learnerId) {
+            const bySubject = {};
+            offerings.forEach(o => {
+                if (!bySubject[o.subjectId]) bySubject[o.subjectId] = { name: o.subjectName, items: [] };
+                bySubject[o.subjectId].items.push(o);
+            });
+
+            const registeredSubjectIds = new Set(
+                registeredPairs.filter(p => p.learnerId === learnerId).map(p => p.subjectId)
+            );
+
+            const registeredGroups = [];
+            const otherGroups = [];
+
+            Object.entries(bySubject).forEach(([subjectId, group]) => {
+                const target = registeredSubjectIds.has(parseInt(subjectId, 10)) ? registeredGroups : otherGroups;
+                target.push({ subjectId, ...group });
+            });
+
+            function renderGroup(group, expanded) {
+                const rows = group.items.map(o => `
+                    <div class="form-check mb-2 border-bottom pb-2">
+                        <input class="form-check-input" type="checkbox" name="selectedOfferingIds" value="${o.offeringId}" id="off-${o.offeringId}">
+                        <label class="form-check-label" for="off-${o.offeringId}">
+                            Grade ${o.grade} — ${o.tutorName}
+                        </label>
+                        <div class="ms-4 mt-1">${deliveryControlHtml(o)}</div>
+                    </div>
+                `).join('');
+
+                return `
+                    <div class="card mb-2">
+                        <div class="card-header">${group.name}</div>
+                        <div class="card-body" style="${expanded ? '' : 'display:none;'}">
+                            ${rows}
+                        </div>
+                    </div>
+                `;
+            }
+
+            let html = '';
+            registeredGroups.forEach(g => { html += renderGroup(g, true); });
+
+            if (otherGroups.length > 0) {
+                html += `
+                    <button type="button" class="btn btn-link p-0 mb-2" id="toggleOtherSubjects">
+                        Show other subjects
+                    </button>
+                    <div id="otherSubjectsContainer" style="display:none;">
+                `;
+                otherGroups.forEach(g => { html += renderGroup(g, true); });
+                html += `</div>`;
+            }
+
+            offeringsContainer.innerHTML = html || '<p class="text-muted">No offerings available.</p>';
+
+            const toggleBtn = document.getElementById('toggleOtherSubjects');
+            if (toggleBtn) {
+                toggleBtn.addEventListener('click', function () {
+                    const container = document.getElementById('otherSubjectsContainer');
+                    const showing = container.style.display !== 'none';
+                    container.style.display = showing ? 'none' : 'block';
+                    toggleBtn.textContent = showing ? 'Show other subjects' : 'Hide other subjects';
+                });
+            }
+        }
+
+        learnerSelect.addEventListener('change', function () {
+            const learnerId = parseInt(this.value, 10);
+            if (!learnerId) {
+                offeringsContainer.innerHTML = '<p class="text-muted">Select a learner to see available offerings.</p>';
+                return;
+            }
+            renderOfferings(learnerId);
+        });
+    </script>
+}

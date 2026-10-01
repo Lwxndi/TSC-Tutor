@@ -1,0 +1,97 @@
+﻿@model Tutor_Manager.ViewModels.TutorSubjectAssignmentViewModel
+@{
+    ViewData["Title"] = $"{Model.TutorName} - Subject Assignments";
+    var recommendation = ViewBag.AiRecommendation as Tutor_Manager.ViewModels.TutorAssignment.AiRecommendationResult;
+}
+
+<h2>@Model.TutorName — Subjects</h2>
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">@TempData["Error"]</div>
+}
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success">@TempData["Success"]</div>
+}
+
+<div class="card mb-3">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start">
+            @* <h5 class="card-title mb-2"><i class="bi bi-stars"></i> AI Recommendation</h5>
+            <form asp-action="GenerateForTutor" method="post">
+                <input type="hidden" name="tutorUserId" value="@Model.TutorUserId" />
+                <button type="submit" class="btn btn-sm btn-outline-primary">
+                    @(recommendation != null ? "Regenerate" : "Generate")
+                </button>
+            </form> *@
+        </div>
+
+        @if (recommendation == null)
+        {
+            <p class="text-muted mb-0">No recommendation generated yet.</p>
+        }
+        else
+        {
+            <p class="mb-2">@recommendation.Reasoning</p>
+            <ul class="list-inline mb-2">
+                @foreach (var rec in recommendation.Recommendations)
+                {
+                    <li class="list-inline-item badge bg-light text-dark border">
+                        @rec.SubjectName — Grade @rec.Grade
+                    </li>
+                }
+            </ul>
+            <small class="text-muted">Generated @recommendation.DateGenerated.ToString("dd MMM yyyy, HH:mm")</small>
+        }
+    </div>
+</div>
+
+<table class="table align-middle">
+    <thead>
+        <tr>
+            <th>Subject</th>
+            <th>Grade 10</th>
+            <th>Grade 11</th>
+            <th>Grade 12</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var subject in Model.Subjects)
+        {
+            <tr>
+                <td>@subject.SubjectName</td>
+                @foreach (var grade in new[] { Grade.Grade10, Grade.Grade11, Grade.Grade12 })
+                {
+                    <td>
+                        @if (subject.OfferedGrades.Contains(grade))
+                        {
+                            var isAssigned = subject.AssignedGrades.Contains(grade);
+                            var isRecommended = recommendation != null && recommendation.Recommendations.Any(r =>
+                                r.SubjectId == subject.SubjectId && (int)grade == r.Grade);
+                            <form asp-action="ToggleSubject" method="post" class="d-inline">
+                                <input type="hidden" name="TutorUserId" value="@Model.TutorUserId" />
+                                <input type="hidden" name="SubjectId" value="@subject.SubjectId" />
+                                <input type="hidden" name="Grade" value="@grade" />
+                                <input type="hidden" name="Assign" value="@(!isAssigned ? "true" : "false")" />
+                                <button type="submit" class="btn btn-sm @(isAssigned ? "btn-success" : "btn-outline-secondary")">
+                                    @(isAssigned ? "Assigned" : "Assign")
+                                </button>
+                            </form>
+                            @if (isRecommended && !isAssigned)
+                            {
+                              <a asp-action="AiRecommendations" class="btn btn-secondary">Back to AI Recommendations</a>
+                            }
+                        }
+                        else
+                        {
+                            <span class="text-muted">—</span>
+                        }
+                    </td>
+                }
+            </tr>
+        }
+    </tbody>
+</table>
+
+<a asp-action="Index" class="btn btn-secondary">Back to Tutors</a>

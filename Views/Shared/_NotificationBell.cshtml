@@ -1,4 +1,6 @@
 ﻿@* Views/Shared/_NotificationBell.cshtml *@
+@Html.AntiForgeryToken() @* NEW — needed so MarkAsRead's [ValidateAntiForgeryToken] doesn't reject the fetch below *@
+
 <div class="notif-bell-wrapper">
     <button id="notifBellBtn" class="notif-bell-btn">
         <i class="bi bi-bell-fill"></i>
@@ -105,11 +107,7 @@
         const list = document.getElementById('notifList');
         const badge = document.getElementById('notifBadge');
 
-        async function loadNotifications() {
-            const res = await fetch('/Notifications/Dropdown');
-            const html = await res.text();
-            list.innerHTML = html;
-
+        function updateBadgeFromList() {
             const unreadCount = list.querySelectorAll('.notif-item.unread').length;
             if (unreadCount > 0) {
                 badge.style.display = 'inline-block';
@@ -117,14 +115,39 @@
             } else {
                 badge.style.display = 'none';
             }
+        }
 
-            // Mark as read when clicked
+        async function loadNotifications() {
+            const res = await fetch('/Notifications/Dropdown');
+            const html = await res.text();
+            list.innerHTML = html;
+
+            updateBadgeFromList();
+
+            // Mark as read when clicked, then navigate to the notification's Link (if any)
             list.querySelectorAll('.notif-item').forEach(item => {
                 item.addEventListener('click', async () => {
                     const id = item.getAttribute('data-id');
-                    await fetch('/Notifications/MarkAsRead?id=' + id, { method: 'POST' });
-                    item.classList.remove('unread');
-                    loadNotifications(); // refresh badge count
+                    const link = item.getAttribute('data-link');
+                    const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value; // NEW
+
+                    try {
+                        await fetch('/Notifications/MarkAsRead?id=' + id, {
+                            method: 'POST',
+                            headers: {
+                                'RequestVerificationToken': token ?? '' // NEW — without this the POST 400s and IsRead never flips
+                            }
+                        });
+                    } catch (e) {
+                        console.error('Failed to mark notification as read', e);
+                    }
+
+                    item.classList.remove('unread'); // NEW — update this item's count locally instead of a full reload
+                    updateBadgeFromList();            // NEW — recompute badge from current DOM, no refetch needed
+
+                    if (link) {
+                        window.location.href = link; // NEW — actually go to the notification's destination
+                    }
                 });
             });
         }

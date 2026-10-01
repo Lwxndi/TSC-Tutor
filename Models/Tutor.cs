@@ -36,8 +36,11 @@ namespace Tutor_Manager.Models
         [StringLength(20)]
         public string? TutorNumber { get; set; }
 
+        public bool IsActive { get; set; } = true;
         public ICollection<TutorSubject> SubjectsTaught { get; set; } = new List<TutorSubject>();
+        public ICollection<TutorAvailability> Availability { get; set; } = new List<TutorAvailability>();
+        public ICollection<TutorUnavailability> Unavailability { get; set; } = new List<TutorUnavailability>();
 
-      
+
     }
 }

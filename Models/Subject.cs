@@ -11,6 +11,10 @@ namespace Tutor_Manager.Models
         [StringLength(50)]
         public required string SubjectName { get; set; }
 
+        public bool IsActive { get; set; } = true;
         public ICollection<TutorSubject> Tutors { get; set; } = new List<TutorSubject>();
+        public ICollection<SubjectGrade> Grades { get; set; } = new List<SubjectGrade>();
+
+
     }
 }

@@ -1,0 +1,239 @@
+﻿@model Tutor_Manager.ViewModels.QuizzViewmodels.QuizCreateViewModel
+@using Tutor_Manager.ViewModels.QuizzViewmodels
+@using Tutor_Manager.Models
+
+@{
+    ViewData["Title"] = "Create Quiz";
+    var materials = (IEnumerable<dynamic>)ViewBag.MaterialsWithSubject;
+    var offerings = (IEnumerable<dynamic>)ViewBag.OfferingsWithSubject;
+    var learners = (IEnumerable<dynamic>)ViewBag.LearnersWithSubject;
+}
+
+<div class="container mt-4">
+    <h2>Create Quiz</h2>
+
+    <form asp-controller="Quiz" asp-action="Create" method="post" id="quizCreateForm">
+        @Html.AntiForgeryToken()
+
+        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+        <div class="mb-3">
+            <label asp-for="StudyMaterialId" class="form-label">Study Material</label>
+            <select asp-for="StudyMaterialId" class="form-select" id="materialSelect">
+                <option value="">-- Select study material --</option>
+                @foreach (var m in materials)
+                {
+                    <option value="@m.Id" data-subject-id="@m.SubjectId">@m.Title</option>
+                }
+            </select>
+            <span asp-validation-for="StudyMaterialId" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="Title" class="form-label">Quiz Title</label>
+            <input asp-for="Title" class="form-control" maxlength="150" />
+            <span asp-validation-for="Title" class="text-danger"></span>
+        </div>
+
+        <div class="row">
+            <div class="col-md-3 mb-3">
+                <label asp-for="OpenDate" class="form-label">Opens On</label>
+                <input asp-for="OpenDate" type="date" class="form-control" />
+                <span asp-validation-for="OpenDate" class="text-danger"></span>
+            </div>
+            <div class="col-md-3 mb-3">
+                <label asp-for="OpenTime" class="form-label">Opens At</label>
+                <input asp-for="OpenTime" type="time" class="form-control" />
+                <span asp-validation-for="OpenTime" class="text-danger"></span>
+            </div>
+            <div class="col-md-3 mb-3">
+                <label asp-for="CloseDate" class="form-label">Closes On</label>
+                <input asp-for="CloseDate" type="date" class="form-control" />
+                <span asp-validation-for="CloseDate" class="text-danger"></span>
+            </div>
+            <div class="col-md-3 mb-3">
+                <label asp-for="CloseTime" class="form-label">Closes At</label>
+                <input asp-for="CloseTime" type="time" class="form-control" />
+                <span asp-validation-for="CloseTime" class="text-danger"></span>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label asp-for="DurationMinutes" class="form-label">Duration (minutes)</label>
+                <input asp-for="DurationMinutes" type="number" class="form-control" min="1" max="300" />
+                <div class="form-text">Time limit once a student starts an attempt. Max 300 minutes.</div>
+                <span asp-validation-for="DurationMinutes" class="text-danger"></span>
+            </div>
+            <div class="col-md-6 mb-3">
+                <label asp-for="MaxAttempts" class="form-label">Max Attempts</label>
+                <input asp-for="MaxAttempts" type="number" class="form-control" min="1" max="10" />
+                <div class="form-text">Max 10 attempts per student.</div>
+                <span asp-validation-for="MaxAttempts" class="text-danger"></span>
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="DifficultyLevel" class="form-label">Difficulty</label>
+            <select asp-for="DifficultyLevel" class="form-select" style="max-width:250px;"
+                    asp-items="Html.GetEnumSelectList<QuizDifficultyLevel>()"></select>
+            <span asp-validation-for="DifficultyLevel" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label d-block">Question Types &amp; Counts</label>
+            <div class="alert alert-warning small" id="zeroQuestionsWarning" style="display:none;">
+                You haven't requested any questions yet — set at least one count below to 1 or more.
+            </div>
+            <div class="row g-2">
+                <div class="col-md-4">
+                    <label asp-for="MultipleChoiceSingleCount" class="form-label small">Multiple Choice (single answer)</label>
+                    <input asp-for="MultipleChoiceSingleCount" type="number" class="form-control question-count-input" min="0" max="50" value="0" />
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="MultipleChoiceMultipleCount" class="form-label small">Multiple Choice (multiple answers)</label>
+                    <input asp-for="MultipleChoiceMultipleCount" type="number" class="form-control question-count-input" min="0" max="50" value="0" />
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="TrueFalseCount" class="form-label small">True / False</label>
+                    <input asp-for="TrueFalseCount" type="number" class="form-control question-count-input" min="0" max="50" value="0" />
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="ShortAnswerCount" class="form-label small">Short Answer</label>
+                    <input asp-for="ShortAnswerCount" type="number" class="form-control question-count-input" min="0" max="50" value="0" />
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="EssayCount" class="form-label small">Essay</label>
+                    <input asp-for="EssayCount" type="number" class="form-control question-count-input" min="0" max="50" value="0" />
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="NumericEquationCount" class="form-label small">Numeric / Equation</label>
+                    <input asp-for="NumericEquationCount" type="number" class="form-control question-count-input" min="0" max="50" value="0" />
+                </div>
+            </div>
+            <div class="form-text">Mixing types is fine — the total across all six determines how many questions the AI generates.</div>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label d-block">Audience</label>
+
+            <div class="form-check">
+                <input class="form-check-input audience-radio" type="radio" name="AudienceType"
+                       id="audienceAll" value="@((int)QuizzTypes.AllEnrolledInSubject)" checked />
+                <label class="form-check-label" for="audienceAll">All students enrolled in this subject</label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input audience-radio" type="radio" name="AudienceType"
+                       id="audienceOffering" value="@((int)QuizzTypes.SpecificOffering)" />
+                <label class="form-check-label" for="audienceOffering">A specific Offering</label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input audience-radio" type="radio" name="AudienceType"
+                       id="audienceLearners" value="@((int)QuizzTypes.SpecificLearners)" />
+                <label class="form-check-label" for="audienceLearners">Specific learners</label>
+            </div>
+        </div>
+
+        <div class="mb-3 audience-section" id="offeringSection" style="display:none;">
+            <label asp-for="OfferingId" class="form-label">Offering</label>
+            <select asp-for="OfferingId" class="form-select" id="offeringSelect">
+                <option value="">-- Select offering --</option>
+                @foreach (var o in offerings)
+                {
+                    <option value="@o.OfferingId" data-subject-id="@o.SubjectId">
+                        @o.SubjectName — Grade @o.Grade — @o.Type
+                    </option>
+                }
+            </select>
+            <span asp-validation-for="OfferingId" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3 audience-section" id="learnersSection" style="display:none;">
+            <label class="form-label">Learners</label>
+            <div id="learnerCheckboxList" class="border rounded p-2" style="max-height: 250px; overflow-y: auto;">
+                @foreach (var l in learners)
+                {
+                    <div class="form-check learner-option" data-subject-id="@l.SubjectId" style="display:none;">
+                        <input class="form-check-input" type="checkbox" name="SelectedLearnerUserIds" value="@l.LearnerUserId" id="learner_@l.LearnerUserId" />
+                        <label class="form-check-label" for="learner_@l.LearnerUserId">@l.FullName</label>
+                    </div>
+                }
+            </div>
+            <div class="form-text">Only learners linked to the selected material's subject are shown.</div>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Create Quiz</button>
+        <a asp-controller="Quiz" asp-action="Index" class="btn btn-secondary">Cancel</a>
+    </form>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script>
+        const materialSelect = document.getElementById('materialSelect');
+        const offeringSelect = document.getElementById('offeringSelect');
+        const offeringSection = document.getElementById('offeringSection');
+        const learnersSection = document.getElementById('learnersSection');
+        const audienceRadios = document.querySelectorAll('.audience-radio');
+        const countInputs = document.querySelectorAll('.question-count-input');
+        const zeroWarning = document.getElementById('zeroQuestionsWarning');
+        const form = document.getElementById('quizCreateForm');
+
+        function getSelectedSubjectId() {
+            const selectedOption = materialSelect.options[materialSelect.selectedIndex];
+            return selectedOption ? selectedOption.getAttribute('data-subject-id') : null;
+        }
+
+        function filterOfferingsAndLearners() {
+            const subjectId = getSelectedSubjectId();
+
+            Array.from(offeringSelect.options).forEach(opt => {
+                if (opt.value === '') return;
+                const matches = opt.getAttribute('data-subject-id') === subjectId;
+                opt.hidden = !matches;
+            });
+            offeringSelect.value = '';
+
+            document.querySelectorAll('.learner-option').forEach(el => {
+                const matches = el.getAttribute('data-subject-id') === subjectId;
+                el.style.display = matches ? '' : 'none';
+                if (!matches) {
+                    el.querySelector('input[type=checkbox]').checked = false;
+                }
+            });
+        }
+
+        function updateAudienceSections() {
+            const selected = document.querySelector('.audience-radio:checked').value;
+            const offeringValue = '@((int)QuizzTypes.SpecificOffering)';
+            const learnersValue = '@((int)QuizzTypes.SpecificLearners)';
+
+            offeringSection.style.display = selected === offeringValue ? '' : 'none';
+            learnersSection.style.display = selected === learnersValue ? '' : 'none';
+        }
+
+        function updateZeroWarning() {
+            const total = Array.from(countInputs).reduce((sum, input) => sum + (parseInt(input.value) || 0), 0);
+            zeroWarning.style.display = total === 0 ? '' : 'none';
+        }
+
+        materialSelect.addEventListener('change', filterOfferingsAndLearners);
+        audienceRadios.forEach(r => r.addEventListener('change', updateAudienceSections));
+        countInputs.forEach(input => input.addEventListener('input', updateZeroWarning));
+
+        // Hard client-side stop, since a 0-question quiz silently "succeeds" with an
+        // empty AI response (exactly what caused this bug) rather than a clear error.
+        form.addEventListener('submit', function (e) {
+            const total = Array.from(countInputs).reduce((sum, input) => sum + (parseInt(input.value) || 0), 0);
+            if (total === 0) {
+                e.preventDefault();
+                zeroWarning.style.display = '';
+                zeroWarning.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        });
+
+        filterOfferingsAndLearners();
+        updateAudienceSections();
+        updateZeroWarning();
+    </script>
+}

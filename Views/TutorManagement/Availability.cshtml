@@ -1,0 +1,66 @@
+﻿@model Tutor_Manager.ViewModels.TutorAvailabilityViewModel
+@{
+    ViewData["Title"] = $"{Model.TutorName} - Availability";
+}
+
+<h2>@Model.TutorName — Availability</h2>
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">@TempData["Error"]</div>
+}
+
+<table class="table align-middle mb-4">
+    <thead>
+        <tr>
+            <th>Day</th>
+            <th>Start</th>
+            <th>End</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var slot in Model.Slots)
+        {
+            <tr>
+                <td>@slot.DayOfWeek</td>
+                <td>@slot.StartTime.ToString(@"hh\:mm")</td>
+                <td>@slot.EndTime.ToString(@"hh\:mm")</td>
+                <td>
+                    <form asp-action="RemoveAvailability" method="post" class="d-inline">
+                        <input type="hidden" name="tutorAvailabilityId" value="@slot.TutorAvailabilityId" />
+                        <input type="hidden" name="tutorUserId" value="@Model.TutorUserId" />
+                        <button type="submit" class="btn btn-sm btn-outline-danger">Remove</button>
+                    </form>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<h5>Add Slot</h5>
+<form asp-action="AddAvailability" method="post" class="row g-2 align-items-end">
+    <input type="hidden" name="TutorUserId" value="@Model.TutorUserId" />
+    <div class="col-auto">
+        <label class="form-label">Day</label>
+        <select name="DayOfWeek" class="form-select">
+            @foreach (var day in Enum.GetValues<DayOfWeek>())
+            {
+                <option value="@day">@day</option>
+            }
+        </select>
+    </div>
+    <div class="col-auto">
+        <label class="form-label">Start</label>
+        <input type="time" name="StartTime" class="form-control" />
+    </div>
+    <div class="col-auto">
+        <label class="form-label">End</label>
+        <input type="time" name="EndTime" class="form-control" />
+    </div>
+    <div class="col-auto">
+        <button type="submit" class="btn btn-primary">Add</button>
+    </div>
+</form>
+
+<a asp-action="Index" class="btn btn-secondary mt-3">Back to Tutors</a>

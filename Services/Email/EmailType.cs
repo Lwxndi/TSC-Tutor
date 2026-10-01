@@ -18,7 +18,10 @@
         TutorApplicationApproved,
 
         // --- Admin Control --
+        AdminAccountCreated,
 
-      AdminAccountCreated
+        // --- Offerings ---
+        OfferingAssigned,
+        OfferingDeactivated
     }
 }

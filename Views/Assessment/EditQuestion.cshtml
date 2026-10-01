@@ -1,0 +1,41 @@
+﻿@* Views/Assessment/EditQuestion.cshtml — also used for Add *@
+@model Tutor_Manager.ViewModels.AssessmentViewmodels.AssessmentQuestionEditViewModel
+
+@{
+    ViewData["Title"] = Model.Id == 0 ? "Add Question" : "Edit Question";
+    var actionName = Model.Id == 0 ? "AddQuestion" : "EditQuestion";
+}
+
+<div class="container mt-4">
+    <h2>@ViewData["Title"]</h2>
+
+    <form asp-controller="Assessment" asp-action="@actionName" method="post">
+        @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="Id" />
+        <input type="hidden" asp-for="AssessmentId" />
+
+        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+        <div class="mb-3">
+            <label asp-for="QuestionText" class="form-label">Question Text</label>
+            <textarea asp-for="QuestionText" class="form-control" rows="4"></textarea>
+            <div class="form-text">LaTeX supported: $inline$ or $$block$$.</div>
+            <span asp-validation-for="QuestionText" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="Marks" class="form-label">Marks</label>
+            <input asp-for="Marks" type="number" class="form-control" min="1" max="100" />
+            <span asp-validation-for="Marks" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="MarkingGuidance" class="form-label">Marking Guidance</label>
+            <textarea asp-for="MarkingGuidance" class="form-control" rows="4"></textarea>
+            <span asp-validation-for="MarkingGuidance" class="text-danger"></span>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Save</button>
+        <a asp-controller="Assessment" asp-action="Review" asp-route-assessmentId="@Model.AssessmentId" class="btn btn-secondary">Cancel</a>
+    </form>
+</div>

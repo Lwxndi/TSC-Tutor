@@ -1,0 +1,183 @@
+﻿@model Tutor_Manager.ViewModels.GuardianPaymentsIndexViewModel
+@using Tutor_Manager.ViewModels
+
+@{
+    ViewData["Title"] = "My Payments";
+}
+
+<div class="container mt-4">
+    <h2 class="mb-3">My Payments</h2>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+    }
+
+    @* ===================== TO PAY ===================== *@
+    <h4 class="mt-4">To pay</h4>
+
+    @if (!Model.PayableInvoices.Any())
+    {
+        <div class="card mb-4">
+            <div class="card-body text-muted">
+                <i class="bi bi-check-circle text-success me-1"></i> You're all caught up. Nothing to pay right now.
+            </div>
+        </div>
+    }
+    else
+    {
+        <form asp-action="Pay" method="post" id="payForm">
+            @Html.AntiForgeryToken()
+
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <div class="form-check mb-0">
+                        <input class="form-check-input" type="checkbox" id="selectAll" />
+                        <label class="form-check-label" for="selectAll">Select all</label>
+                    </div>
+                    <span class="text-muted small">Tick one or more invoices to pay them in a single payment.</span>
+                </div>
+
+                <ul class="list-group list-group-flush">
+                    @foreach (var invoice in Model.PayableInvoices)
+                    {
+                        var balance = PaymentViewHelpers.Balance(invoice);
+                        <li class="list-group-item">
+                            <div class="d-flex gap-3">
+                                <div class="pt-1">
+                                    <input class="form-check-input invoice-check" type="checkbox"
+                                           name="invoiceIds" value="@invoice.InvoiceId"
+                                           id="inv-@invoice.InvoiceId"
+                                           data-amount="@PaymentViewHelpers.Plain(balance)" />
+                                </div>
+                                <div class="flex-grow-1">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <label for="inv-@invoice.InvoiceId" class="fw-semibold mb-1">
+                                            @PaymentViewHelpers.InvoiceRef(invoice)
+                                            <span class="text-muted fw-normal small ms-2">issued @invoice.CreatedAt.ToLocalTime().ToString("dd MMM yyyy")</span>
+                                        </label>
+                                        <strong>R@(balance.ToString("N2"))</strong>
+                                    </div>
+
+                                    @foreach (var li in invoice.LineItems.Where(PaymentViewHelpers.IsUnpaid))
+                                    {
+                                        <div class="small">
+                                            <span class="fw-semibold">@PaymentViewHelpers.LearnerName(li)</span>
+                                            <span class="text-muted">— @PaymentViewHelpers.Describe(li)</span>
+                                            @if (li.IsCarriedForward)
+                                            {
+                                                <span class="badge bg-info text-dark ms-1">Carried forward</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">(@PaymentViewHelpers.Month(li))</span>
+                                            }
+                                            <span class="float-end text-muted">R@((li.AmountDue - li.AmountPaid).ToString("N2"))</span>
+                                        </div>
+                                    }
+
+                                    <div class="mt-1">
+                                        <a asp-action="Details" asp-route-invoiceId="@invoice.InvoiceId" class="small me-3">View</a>
+                                        <a asp-action="DownloadInvoice" asp-route-invoiceId="@invoice.InvoiceId" class="small">
+                                            <i class="bi bi-download"></i> Invoice PDF
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </li>
+                    }
+                </ul>
+
+                <div class="card-footer d-flex justify-content-between align-items-center">
+                    <div>
+                        Selected total: <strong>R<span id="selectedTotal">0.00</span></strong>
+                    </div>
+                    <button type="submit" id="payBtn" class="btn btn-primary" disabled>
+                        <i class="bi bi-credit-card me-1"></i> Pay selected
+                    </button>
+                </div>
+            </div>
+        </form>
+    }
+
+    @* ===================== TRANSACTIONS ===================== *@
+    <h4 class="mt-4">Transactions</h4>
+
+    @if (!Model.Transactions.Any())
+    {
+        <p class="text-muted">No payments yet. Your receipts will appear here once you've paid.</p>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-striped align-middle">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Reference</th>
+                        <th>Learner(s)</th>
+                        <th class="text-end">Amount</th>
+                        <th class="text-end">Receipt</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var p in Model.Transactions)
+                    {
+                        <tr>
+                            <td>@PaymentViewHelpers.When(p.PaidAt)</td>
+                            <td>@PaymentViewHelpers.ReceiptRef(p)</td>
+                            <td>@PaymentViewHelpers.Learners(PaymentViewHelpers.PaidLines(p))</td>
+                            <td class="text-end">R@(p.Amount.ToString("N2"))</td>
+                            <td class="text-end">
+                                <a asp-action="Transaction" asp-route-paymentId="@p.PaymentId" class="btn btn-sm btn-outline-secondary">View</a>
+                                <a asp-action="DownloadReceipt" asp-route-paymentId="@p.PaymentId" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-download"></i> Receipt
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        (function () {
+            const boxes = document.querySelectorAll('.invoice-check');
+            const selectAll = document.getElementById('selectAll');
+            const totalEl = document.getElementById('selectedTotal');
+            const payBtn = document.getElementById('payBtn');
+            const form = document.getElementById('payForm');
+            if (!boxes.length) return;
+
+            function update() {
+                let total = 0, count = 0;
+                boxes.forEach(b => { if (b.checked) { total += parseFloat(b.dataset.amount); count++; } });
+                totalEl.textContent = total.toLocaleString('en-ZA', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                payBtn.disabled = count === 0;
+                selectAll.checked = count === boxes.length;
+                selectAll.indeterminate = count > 0 && count < boxes.length;
+            }
+
+            selectAll.addEventListener('change', () => {
+                boxes.forEach(b => b.checked = selectAll.checked);
+                update();
+            });
+            boxes.forEach(b => b.addEventListener('change', update));
+
+            // Stop double-clicks creating two Stripe sessions.
+            form.addEventListener('submit', () => {
+                payBtn.disabled = true;
+                payBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Taking you to Stripe…';
+            });
+
+            update();
+        })();
+    </script>
+}

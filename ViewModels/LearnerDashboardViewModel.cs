@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using Tutor_Manager.ViewModels.Sessions;
 
 namespace Tutor_Manager.ViewModels
 {
@@ -12,13 +13,14 @@ namespace Tutor_Manager.ViewModels
         public List<GuardianSummary> Guardians { get; set; } = new();
 
         // Placeholder until session scheduling is built
-        public List<string> UpcomingSessions { get; set; } = new();
+        //public List<string> UpcomingSessions { get; set; } = new();
+        public List<SessionListItemViewModel> UpcomingSessions { get; set; } = new();
     }
 
     public class GuardianSummary
     {
-        public required string FullName { get; set; }
-        public required string PhoneNumber { get; set; }
-        public string? Relationship { get; set; }
+        public  string FullName { get; set; } = null!;
+        public  string? PhoneNumber { get; set; }
+        public string Relationship { get; set; }=null!;
     }
 }

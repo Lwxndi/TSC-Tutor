@@ -1,0 +1,61 @@
+﻿@model Tutor_Manager.ViewModels.TutorUnavailabilityViewModel
+@{
+    ViewData["Title"] = $"{Model.TutorName} - Leave";
+}
+
+<h2>@Model.TutorName — Leave / Unavailability</h2>
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">@TempData["Error"]</div>
+}
+
+<table class="table align-middle mb-4">
+    <thead>
+        <tr>
+            <th>Start</th>
+            <th>End</th>
+            <th>Reason</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var entry in Model.Entries)
+        {
+            <tr>
+                <td>@entry.StartDate.ToString("dd MMM yyyy")</td>
+                <td>@entry.EndDate.ToString("dd MMM yyyy")</td>
+                <td>@entry.Reason</td>
+                <td>
+                    <form asp-action="RemoveUnavailability" method="post" class="d-inline">
+                        <input type="hidden" name="tutorUnavailabilityId" value="@entry.TutorUnavailabilityId" />
+                        <input type="hidden" name="tutorUserId" value="@Model.TutorUserId" />
+                        <button type="submit" class="btn btn-sm btn-outline-danger">Remove</button>
+                    </form>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<h5>Record Leave</h5>
+<form asp-action="AddUnavailability" method="post" class="row g-2 align-items-end">
+    <input type="hidden" name="TutorUserId" value="@Model.TutorUserId" />
+    <div class="col-auto">
+        <label class="form-label">Start Date</label>
+        <input type="date" name="StartDate" class="form-control" />
+    </div>
+    <div class="col-auto">
+        <label class="form-label">End Date</label>
+        <input type="date" name="EndDate" class="form-control" />
+    </div>
+    <div class="col-auto">
+        <label class="form-label">Reason</label>
+        <input type="text" name="Reason" class="form-control" placeholder="Optional" />
+    </div>
+    <div class="col-auto">
+        <button type="submit" class="btn btn-primary">Record Leave</button>
+    </div>
+</form>
+
+<a asp-action="Index" class="btn btn-secondary mt-3">Back to Tutors</a>

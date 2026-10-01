@@ -1,0 +1,57 @@
+﻿@model Tutor_Manager.ViewModels.Sessions.AssignSubstituteViewModel
+@{
+    ViewData["Title"] = "Assign Substitute Tutor";
+}
+
+<h2>Assign Substitute Tutor</h2>
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">@TempData["Error"]</div>
+}
+
+<div class="card mb-3">
+    <div class="card-body">
+        <h5 class="card-title">@Model.SessionSummary.SubjectName — Grade @((int)Model.SessionSummary.Grade)</h5>
+        <p class="mb-1"><strong>Date:</strong> @Model.SessionSummary.Date.ToString("dd MMM yyyy")</p>
+        <p class="mb-1"><strong>Time:</strong> @Model.SessionSummary.StartTime.ToString(@"hh\:mm") – @Model.SessionSummary.EndTime.ToString(@"hh\:mm")</p>
+        <p class="mb-0">
+            <strong>Current tutor:</strong> @Model.SessionSummary.TutorName
+            @if (Model.SessionSummary.IsSubstitute)
+            {
+                <span class="badge bg-warning text-dark">Substitute assigned</span>
+            }
+        </p>
+    </div>
+</div>
+
+@if (!Model.AvailableSubstitutes.Any())
+{
+    <p class="text-muted">No available substitutes found for this day/time slot.</p>
+}
+else
+{
+    <form asp-action="AssignSubstitute" method="post">
+        <input type="hidden" name="sessionId" value="@Model.SessionId" />
+        <div class="mb-3">
+            <label class="form-label">Choose a substitute tutor</label>
+            <select name="tutorUserId" class="form-select" required>
+                <option value="">-- Select --</option>
+                @foreach (var tutor in Model.AvailableSubstitutes)
+                {
+                    <option value="@tutor.TutorUserId">@tutor.FullName</option>
+                }
+            </select>
+        </div>
+        <button type="submit" class="btn btn-primary">Assign Substitute</button>
+        <a asp-action="Details" asp-route-id="@Model.SessionId" class="btn btn-secondary">Cancel</a>
+    </form>
+}
+
+@if (Model.SessionSummary.IsSubstitute)
+{
+    <form asp-action="RemoveSubstitute" method="post" class="mt-3">
+        <input type="hidden" name="sessionId" value="@Model.SessionId" />
+        <button type="submit" class="btn btn-outline-danger btn-sm">Remove substitute — revert to regular tutor</button>
+    </form>
+}

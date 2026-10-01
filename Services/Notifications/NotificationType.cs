@@ -10,6 +10,13 @@
         SessionCancelled,
         SessionMissed,
         PaymentReceived,
-        PaymentFailed
+        PaymentFailed,
+        SubjectDeactivated,
+        TutorDeactivated,
+        TutorReactivated,
+        OfferingAssigned,
+        OfferingDeactivated,
+        SessionCompleted,
+        PaymentReceivedAdmin
     }
 }

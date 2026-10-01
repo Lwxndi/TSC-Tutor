@@ -1,0 +1,48 @@
+﻿@model Tutor_Manager.ViewModels.EnrollLearnerViewModel
+@{
+    ViewData["Title"] = "Enroll a Learner";
+}
+
+<h2>Enroll a Learner</h2>
+
+<div asp-validation-summary="All" class="text-danger"></div>
+
+<form asp-action="Enroll" method="post">
+    <div class="row g-3">
+        <div class="col-md-6">
+            <label class="form-label">Learner</label>
+            <select asp-for="LearnerUserId" class="form-select">
+                <option value="">-- Select a learner --</option>
+                @foreach (var l in Model.AvailableLearners)
+                {
+                    <option value="@l.LearnerUserId">
+                        @l.FullName @(l.GradeLevel.HasValue ? $"(Grade {(int)l.GradeLevel.Value})" : "")
+                    </option>
+                }
+            </select>
+        </div>
+
+        <div class="col-md-6">
+            <label class="form-label">Offering</label>
+            <select asp-for="OfferingId" class="form-select" id="offeringSelect">
+                <option value="">-- Select an offering --</option>
+                @foreach (var o in Model.AvailableOfferings)
+                {
+                    <option value="@o.OfferingId" disabled="@o.IsFull" data-full="@o.IsFull.ToString().ToLower()">
+                        @o.SubjectName — Grade @((int)o.Grade) — @o.TutorName
+                        (@o.CurrentEnrolments/@o.Capacity)@(o.IsFull ? " — FULL" : "")
+                    </option>
+                }
+            </select>
+            <div class="form-text">Full offerings are shown but cannot be selected.</div>
+        </div>
+
+        <div class="col-md-4">
+            <label class="form-label">Start Date</label>
+            <input asp-for="StartDate" type="date" class="form-control" />
+        </div>
+    </div>
+
+    <button type="submit" class="btn btn-primary mt-3">Enroll</button>
+    <a asp-action="Index" class="btn btn-secondary mt-3">Cancel</a>
+</form>

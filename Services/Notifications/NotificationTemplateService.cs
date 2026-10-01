@@ -34,6 +34,27 @@ namespace Tutor_Manager.Services.Notifications
                 NotificationType.PaymentFailed =>
                     ("Payment Failed", $"Your payment of R{data["Amount"]} could not be processed."),
 
+                NotificationType.SubjectDeactivated =>
+                    ("Subject Deactivated", $"{data["SubjectName"]} has been deactivated and is no longer available for new offerings."),
+
+                NotificationType.TutorDeactivated =>
+                    ("Account Deactivated", "Your tutor account has been deactivated. Contact TSC administration for details."),
+
+                NotificationType.TutorReactivated =>
+                    ("Account Reactivated", "Your tutor account has been reactivated. Welcome back!"),
+                NotificationType.OfferingAssigned =>
+                    ("New Offering Assigned", $"You've been assigned to teach {data["Subject"]} (Grade {data["Grade"]})."),
+
+                NotificationType.OfferingDeactivated =>
+                    ("Offering Discontinued", $"{data["Subject"]} (Grade {data["Grade"]}) has been discontinued."),
+
+                NotificationType.SessionCompleted =>
+            ("Session Completed", $"{data["TutorName"]}'s {data["Subject"]} session (Grade {data["Grade"]}) on {data["Date"]} was marked completed."),
+
+                NotificationType.PaymentReceivedAdmin =>
+        ("Payment Received", $"{data["GuardianName"]} paid R{data["Amount"]} for {data["Learners"]}."),
+
+
                 _ => throw new NotImplementedException($"No notification template defined for {type}")
             };
         }

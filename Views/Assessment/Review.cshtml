@@ -1,0 +1,103 @@
+﻿@* Views/Assessment/Review.cshtml *@
+@model Tutor_Manager.ViewModels.AssessmentViewmodels.AssessmentReviewViewModel
+
+@{
+    ViewData["Title"] = "Review Assessment";
+    var marksMismatch = Model.DeclaredTotalMarks.HasValue && Model.DeclaredTotalMarks.Value != Model.ComputedTotalMarks;
+}
+
+<div class="container mt-4">
+    <h2>Review: @Model.AssessmentTitle</h2>
+    <p class="text-muted">Status: @Model.Status</p>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+    }
+
+    <div class="alert @(marksMismatch ? "alert-warning" : "alert-secondary")">
+        Computed total: <strong>@Model.ComputedTotalMarks</strong>
+        @if (Model.DeclaredTotalMarks.HasValue)
+        {
+            <span> — Declared total: <strong>@Model.DeclaredTotalMarks</strong></span>
+            @if (marksMismatch)
+            {
+                <span> (these don't match — review the question marks below)</span>
+            }
+        }
+    </div>
+
+    @if (Model.Status == Tutor_Manager.Models.AssessmentGenerationStatus.Generated)
+    {
+        <a asp-controller="Assessment" asp-action="AddQuestion" asp-route-assessmentId="@Model.AssessmentId" class="btn btn-outline-primary mb-3">Add Question</a>
+    }
+
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Question</th>
+                <th>Marks</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var q in Model.Questions)
+            {
+                <tr>
+                    <td>@q.DisplayOrder</td>
+                    <td class="katex-content">@q.QuestionText</td>
+                    <td>@q.Marks</td>
+                    <td>
+                        @if (Model.Status == Tutor_Manager.Models.AssessmentGenerationStatus.Generated)
+                        {
+                            <a asp-controller="Assessment" asp-action="EditQuestion" asp-route-assessmentId="@Model.AssessmentId" asp-route-questionId="@q.Id" class="btn btn-sm btn-outline-secondary">Edit</a>
+                            <form asp-controller="Assessment" asp-action="DeleteQuestion" asp-route-assessmentId="@Model.AssessmentId" asp-route-questionId="@q.Id" method="post" class="d-inline" onsubmit="return confirm('Delete this question?');">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                            </form>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    @if (Model.Status == Tutor_Manager.Models.AssessmentGenerationStatus.Generated)
+    {
+        <form asp-controller="Assessment" asp-action="Confirm" asp-route-assessmentId="@Model.AssessmentId" method="post" class="d-inline">
+            @Html.AntiForgeryToken()
+            <button type="submit" class="btn btn-success">Confirm & Finish Review</button>
+        </form>
+    }
+    else if (Model.Status == Tutor_Manager.Models.AssessmentGenerationStatus.Confirmed)
+    {
+        <form asp-controller="Assessment" asp-action="Unconfirm" asp-route-assessmentId="@Model.AssessmentId" method="post" class="d-inline">
+            @Html.AntiForgeryToken()
+            <button type="submit" class="btn btn-outline-warning">Un-confirm</button>
+        </form>
+    }
+</div>
+
+@section Scripts {
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            document.querySelectorAll('.katex-content').forEach(function (el) {
+                renderMathInElement(el, {
+                    delimiters: [
+                        { left: "$$", right: "$$", display: true },
+                        { left: "$", right: "$", display: false }
+                    ],
+                    throwOnError: false
+                });
+            });
+        });
+    </script>
+}

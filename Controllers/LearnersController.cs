@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 using Tutor_Manager.Models;
+using Tutor_Manager.Services;
 using Tutor_Manager.Services.Email;
 using Tutor_Manager.ViewModels;
 
@@ -13,12 +14,13 @@ public class LearnersController : Controller
     private readonly Tutor_ManagerDatabaseContext _context;
     private readonly IEmailService _emailService;
     private readonly IEmailTemplateService _templates;
-
-    public LearnersController(Tutor_ManagerDatabaseContext context, IEmailService emailService, IEmailTemplateService templates)
+    private readonly ISessionService _sessionService;
+    public LearnersController(Tutor_ManagerDatabaseContext context, IEmailService emailService, IEmailTemplateService templates, ISessionService sessionService)
     {
         _context = context;
         _emailService = emailService;
         _templates = templates;
+        _sessionService = sessionService;
     }
 
     // GET: LEARNERS
@@ -45,6 +47,9 @@ public class LearnersController : Controller
         if (learner == null)
             return NotFound();
 
+        var upcomingSessions = await _sessionService.GetLearnerTimetableAsync(
+            userId, DateTime.Today, DateTime.Today.AddDays(7));
+
         var model = new LearnerDashboardViewModel
         {
             FirstName = learner.User.FirstName,
@@ -60,7 +65,7 @@ public class LearnersController : Controller
                 PhoneNumber = lg.Parent.User.PhoneNumber,
                 Relationship = lg.RelationshipToLearner
             }).ToList(),
-            UpcomingSessions = new List<string>() // placeholder - wire up once sessions exist
+            UpcomingSessions = upcomingSessions // no more .Select(...) formatting — pass the real objects through
         };
 
         return View(model);

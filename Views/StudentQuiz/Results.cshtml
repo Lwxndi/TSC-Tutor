@@ -1,0 +1,47 @@
+﻿@* Views/StudentQuiz/Results.cshtml *@
+@model List<Tutor_Manager.ViewModels.QuizzViewmodels.QuizResultSummaryViewModel>
+@using Tutor_Manager.Helpers;
+@{
+    ViewData["Title"] = "My Quiz Results";
+}
+
+<div class="container mt-4">
+    <h2>My Quiz Results</h2>
+
+    @if (!Model.Any())
+    {
+        <p class="text-muted">You haven't completed any quizzes yet.</p>
+    }
+    else
+    {
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Quiz</th>
+                    <th>Submitted</th>
+                    <th>Score</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var r in Model)
+                {
+                    <tr>
+                        <td>@r.QuizTitle</td>
+                        <td>
+                            @SouthAfricaTime.ToSast(r.SubmittedAt).ToString("dd MMM yyyy, HH:mm")
+                            @if (r.IsAutoSubmitted)
+                            {
+                                <span class="badge bg-secondary ms-1">Auto-submitted</span>
+                            }
+                        </td>
+                        <td><strong>@r.TotalMarksAwarded / @r.TotalPossibleMarks</strong></td>
+                        <td>
+                            <a asp-controller="StudentQuiz" asp-action="Result" asp-route-attemptId="@r.AttemptId" class="btn btn-sm btn-outline-secondary">View Details</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</div>

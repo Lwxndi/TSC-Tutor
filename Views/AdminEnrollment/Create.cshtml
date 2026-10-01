@@ -1,0 +1,112 @@
+﻿@using Microsoft.AspNetCore.Mvc.Rendering
+@using Tutor_Manager.Models.Enums
+
+@{
+    ViewData["Title"] = "Enroll Learner Directly";
+    var learners = (List<SelectListItem>)ViewBag.AvailableLearners;
+    var offerings = (List<SelectListItem>)ViewBag.AvailableOfferings;
+    var guardianPairs = (List<(int LearnerUserId, int GuardianUserId, string GuardianName)>)ViewBag.LearnerGuardianPairs;
+}
+
+<div class="container mt-4">
+    <h2>Enroll Learner Directly</h2>
+    <p class="text-muted">For walk-in/phone sign-ups or migrating existing students. This creates the enrollment as Active immediately — no request/review step.</p>
+
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+    <form asp-controller="AdminEnrollment" asp-action="Create" method="post">
+        @Html.AntiForgeryToken()
+
+        <div class="mb-3">
+            <label class="form-label">Learner</label>
+            <select name="learnerUserId" id="learnerSelect" class="form-select" required>
+                <option value="">-- Select a learner --</option>
+                @foreach (var l in learners)
+                {
+                    <option value="@l.Value">@l.Text</option>
+                }
+            </select>
+        </div>
+
+        @* NEW — no "primary guardian" concept exists, so Admin must pick one explicitly
+           to bill. Filtered to the selected learner's own linked guardians via JS below,
+           since this system already uses cascading dropdowns for Offering Subject/Grade/
+           Tutor rather than a server round trip. *@
+        <div class="mb-3">
+            <label class="form-label">Bill To (Guardian)</label>
+            <select name="guardianUserId" id="guardianSelect" class="form-select" required disabled>
+                <option value="">-- Select a learner first --</option>
+            </select>
+            <div class="form-text">The invoice for this enrollment will be sent to whichever guardian is selected here.</div>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Offering</label>
+            <select name="offeringId" class="form-select" required>
+                <option value="">-- Select an offering --</option>
+                @foreach (var o in offerings)
+                {
+                    <option value="@o.Value">@o.Text</option>
+                }
+            </select>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label d-block">Delivery Mode</label>
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="deliveryMode" id="modeInPerson"
+                       value="@DeliveryMode.InPerson" checked />
+                <label class="form-check-label" for="modeInPerson">In-Person</label>
+            </div>
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="deliveryMode" id="modeRemote"
+                       value="@DeliveryMode.Remote" />
+                <label class="form-check-label" for="modeRemote">Remote</label>
+            </div>
+            <div class="form-text">Must match what the selected offering actually supports (Physical/Remote/Hybrid).</div>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Enroll as Active</button>
+        <a asp-controller="AdminEnrollment" asp-action="Index" class="btn btn-secondary">Cancel</a>
+    </form>
+</div>
+
+@section Scripts {
+    <script>
+        // Flat (learner, guardian, name) triples rendered server-side, filtered here —
+        // same pattern as the existing Offering Subject->Grade->Tutor cascade elsewhere
+        // in this project.
+        const guardianPairs = [
+            @foreach (var pair in guardianPairs)
+            {
+                <text>{ learnerId: @pair.LearnerUserId, guardianId: @pair.GuardianUserId, name: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(pair.GuardianName)) },</text>
+            }
+        ];
+
+        const learnerSelect = document.getElementById('learnerSelect');
+        const guardianSelect = document.getElementById('guardianSelect');
+
+        learnerSelect.addEventListener('change', function () {
+            const learnerId = parseInt(this.value, 10);
+            guardianSelect.innerHTML = '';
+
+            if (!learnerId) {
+                guardianSelect.disabled = true;
+                guardianSelect.innerHTML = '<option value="">-- Select a learner first --</option>';
+                return;
+            }
+
+            const matches = guardianPairs.filter(p => p.learnerId === learnerId);
+
+            if (matches.length === 0) {
+                guardianSelect.disabled = true;
+                guardianSelect.innerHTML = '<option value="">-- No guardians linked to this learner --</option>';
+                return;
+            }
+
+            guardianSelect.disabled = false;
+            guardianSelect.innerHTML = '<option value="">-- Select a guardian --</option>' +
+                matches.map(p => `<option value="${p.guardianId}">${p.name}</option>`).join('');
+        });
+    </script>
+}

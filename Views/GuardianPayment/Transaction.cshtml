@@ -1,0 +1,111 @@
+﻿@model Tutor_Manager.ViewModels.PaymentSuccessViewModel
+@using Tutor_Manager.Models.Enums
+@using Tutor_Manager.ViewModels
+
+@{
+    ViewData["Title"] = "Payment";
+    var lines = PaymentViewHelpers.PaidLines(Model.Payment);
+}
+
+<div class="container mt-4" style="max-width: 800px;">
+
+    @if (Model.IsPaid)
+    {
+        <div class="alert alert-success">
+            <h4 class="alert-heading"><i class="bi bi-check-circle me-1"></i> Paid, thank you!</h4>
+            <p class="mb-0">
+                We've received your payment of <strong>R@(Model.Payment.Amount.ToString("N2"))</strong>
+                (@PaymentViewHelpers.ReceiptRef(Model.Payment)) on @PaymentViewHelpers.When(Model.Payment.PaidAt).
+            </p>
+        </div>
+
+        @if (!string.IsNullOrWhiteSpace(Model.Payment.ReviewNote))
+        {
+            <div class="alert alert-warning">
+                We've recorded your payment, but one part of it needs a quick check by our team. You don't need to do anything.
+            </div>
+        }
+
+        <div class="card mb-3">
+            <div class="card-header fw-semibold">What you paid for</div>
+            <div class="table-responsive">
+                <table class="table mb-0 align-middle">
+                    <thead>
+                        <tr><th>Learner</th><th>Description</th><th>Month</th><th class="text-end">Amount</th></tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var li in lines)
+                        {
+                            <tr>
+                                <td>@PaymentViewHelpers.LearnerName(li)</td>
+                                <td>
+                                    @PaymentViewHelpers.Describe(li)
+                                    @if (li.IsCarriedForward)
+                                    {
+                                        <span class="badge bg-info text-dark ms-1">Carried forward</span>
+                                    }
+                                </td>
+                                <td>@PaymentViewHelpers.Month(li)</td>
+                                <td class="text-end">R@(li.AmountDue.ToString("N2"))</td>
+                            </tr>
+                        }
+                    </tbody>
+                    <tfoot>
+                        <tr class="fw-bold">
+                            <td colspan="3" class="text-end">Total paid</td>
+                            <td class="text-end">R@(Model.Payment.Amount.ToString("N2"))</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center">
+            <a asp-action="DownloadReceipt" asp-route-paymentId="@Model.Payment.PaymentId" class="btn btn-outline-primary">
+                <i class="bi bi-download"></i> Download receipt
+            </a>
+            <a asp-action="Index" class="btn btn-primary">Confirm</a>
+        </div>
+        <p class="text-muted small mt-3 mb-0">
+            Downloading is optional. Your receipt will always be available in the transactions table on your payments page.
+        </p>
+    }
+    else if (Model.Status == PaymentStatus.Pending)
+    {
+        <div class="alert alert-info">
+            <h4 class="alert-heading">
+                <span class="spinner-border spinner-border-sm me-2"></span> Confirming your payment…
+            </h4>
+            <p class="mb-0">
+                We're waiting for confirmation from the payment provider. This page will refresh by itself.
+                If you were charged, your receipt will appear on your payments page shortly.
+            </p>
+        </div>
+        <a asp-action="Index" class="btn btn-secondary">Back to my payments</a>
+    }
+    else if (Model.Status == PaymentStatus.NeedsReview)
+    {
+        <div class="alert alert-warning">
+            <h4 class="alert-heading">We're checking your payment</h4>
+            <p class="mb-0">
+                Your payment came through, but we need to verify it before it shows as paid. Please contact us if this isn't sorted shortly.
+            </p>
+        </div>
+        <a asp-action="Index" class="btn btn-secondary">Back to my payments</a>
+    }
+    else
+    {
+        <div class="alert alert-danger">
+            <h4 class="alert-heading">This payment didn't go through</h4>
+            <p class="mb-0">You have not been charged for this attempt. You can try again from your payments page.</p>
+        </div>
+        <a asp-action="Index" class="btn btn-primary">Back to my payments</a>
+    }
+</div>
+
+@section Scripts {
+    @if (Model.Status == PaymentStatus.Pending)
+    {
+        <script>setTimeout(function () { window.location.reload(); }, 4000);</script>
+    }
+}

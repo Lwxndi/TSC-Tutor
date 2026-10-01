@@ -1,0 +1,40 @@
+﻿@model List<Tutor_Manager.ViewModels.OfferingPickerItem>
+@{
+    ViewData["Title"] = "Select Offering";
+}
+
+<h2>Create Session — Select an Offering</h2>
+<p class="text-muted">Pick which class you're scheduling a session for.</p>
+
+@if (!Model.Any())
+{
+    <p class="text-muted">No active offerings found.</p>
+}
+else
+{
+    <table class="table table-hover align-middle">
+        <thead>
+            <tr>
+                <th>Subject / Grade</th>
+                <th>Tutor</th>
+                <th>Teaching Days</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var o in Model)
+            {
+                <tr>
+                    <td>@o.SubjectName — Grade @((int)o.Grade)</td>
+                    <td>@o.TutorName</td>
+                    <td>@string.Join(", ", o.TeachingDays)</td>
+                    <td>
+                        <a asp-action="Create" asp-route-offeringId="@o.OfferingId" class="btn btn-sm btn-primary">Select</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+<a asp-action="Index" class="btn btn-secondary">Cancel</a>

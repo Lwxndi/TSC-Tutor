@@ -1,0 +1,258 @@
+﻿@* Views/StudyMaterial/Edit.cshtml *@
+@model Tutor_Manager.ViewModels.StudyMaterialEditViewModel
+@using Tutor_Manager.ViewModels
+
+@{
+    ViewData["Title"] = "Edit Study Material";
+}
+
+<div class="container mt-4">
+    <h2>Edit Study Material</h2>
+
+    <div class="alert alert-info">
+        <strong>Limits:</strong> PDF, Word, or PowerPoint only — maximum 10 files total, 20MB each.
+    </div>
+
+    <form asp-controller="StudyMaterial" asp-action="Edit" method="post" enctype="multipart/form-data" id="editForm">
+        @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="Id" />
+
+        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+        <div class="mb-3">
+            <label asp-for="SubjectId" class="form-label">Subject</label>
+            <select asp-for="SubjectId" asp-items="Model.AvailableSubjects" class="form-select">
+                <option value="">-- Select a subject --</option>
+            </select>
+            <span asp-validation-for="SubjectId" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="Title" class="form-label">Title</label>
+            <input asp-for="Title" class="form-control" maxlength="150" />
+            <span asp-validation-for="Title" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="TopicChapterLabel" class="form-label">Topic / Chapter</label>
+            <input asp-for="TopicChapterLabel" class="form-control" maxlength="200" />
+            <span asp-validation-for="TopicChapterLabel" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="Description" class="form-label">Description</label>
+            <textarea asp-for="Description" class="form-control" rows="3" maxlength="1000"></textarea>
+            <span asp-validation-for="Description" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Existing Files</label>
+            @if (!Model.ExistingFiles.Any())
+            {
+                <p class="text-muted">No existing files.</p>
+            }
+            else
+            {
+                <ul class="list-group" id="existingFilesList">
+                    @for (int i = 0; i < Model.ExistingFiles.Count; i++)
+                    {
+                        <li class="list-group-item d-flex align-items-center gap-2">
+                            <input type="checkbox" class="form-check-input keep-file-checkbox"
+                                   name="FileIdsToRemove" value="@Model.ExistingFiles[i].Id"
+                                   id="keepFile_@i" />
+                            <label for="keepFile_@i">Remove <strong>@Model.ExistingFiles[i].FileName</strong></label>
+                        </li>
+                    }
+                </ul>
+                <div class="form-text">Check a file to remove it when you save.</div>
+            }
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="NewFiles" class="form-label">Add New Files</label>
+            <input type="file"
+                   id="newFilesInput"
+                   name="NewFiles"
+                   class="form-control"
+                   multiple
+                   accept=".pdf,.doc,.docx,.ppt,.pptx" />
+            <div id="fileValidationError" class="text-danger mt-1"></div>
+            <span asp-validation-for="NewFiles" class="text-danger"></span>
+        </div>
+
+        <div id="selectedFilesList" class="mb-3"></div>
+
+        <button type="submit" class="btn btn-primary">Save Changes</button>
+        <a asp-controller="StudyMaterial" asp-action="Index" class="btn btn-secondary">Cancel</a>
+    </form>
+</div>
+
+<!-- Reuse the same file issue modal pattern as Upload -->
+<div class="modal fade" id="fileIssueModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">File Selection Issue</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p id="modalIssueSummary" class="text-danger fw-semibold"></p>
+                <p class="text-muted small">Uncheck any files you want to remove from this upload, then continue — or cancel to start over.</p>
+                <ul id="modalFileList" class="list-group"></ul>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" id="modalCancelBtn">Cancel</button>
+                <button type="button" class="btn btn-primary" id="modalContinueBtn">Continue with Selected Files</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+
+    <script>
+        const existingFileCount = @Model.ExistingFiles.Count;
+        const allowedExtensions = ['.pdf', '.doc', '.docx', '.ppt', '.pptx'];
+        const maxSizeBytes = 20 * 1024 * 1024;
+        const maxCount = 10;
+        let pendingFiles = [];
+
+        function currentKeptExistingCount() {
+            const totalExisting = existingFileCount;
+            const markedForRemoval = document.querySelectorAll('.keep-file-checkbox:checked').length;
+            return totalExisting - markedForRemoval;
+        }
+
+        const newFilesInput = document.getElementById('newFilesInput');
+
+        newFilesInput.addEventListener('change', function (e) {
+            const files = Array.from(e.target.files);
+            if (files.length === 0) return;
+
+            pendingFiles = files.map(file => {
+                const extension = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
+                let valid = true;
+                let reason = '';
+                if (!allowedExtensions.includes(extension)) {
+                    valid = false;
+                    reason = 'Unsupported file type';
+                } else if (file.size > maxSizeBytes) {
+                    valid = false;
+                    reason = `Too large (${(file.size / (1024 * 1024)).toFixed(2)} MB, max 20MB)`;
+                }
+                return { file, valid, reason };
+            });
+
+            const wouldBeTotal = currentKeptExistingCount() + files.length;
+            const tooMany = wouldBeTotal > maxCount;
+            const hasInvalid = pendingFiles.some(f => !f.valid);
+
+            if (tooMany || hasInvalid) {
+                showFileIssueModal(tooMany, wouldBeTotal);
+            } else {
+                finalizeFiles(pendingFiles.map(f => f.file));
+            }
+        });
+
+        function showFileIssueModal(tooMany, wouldBeTotal) {
+            const summary = document.getElementById('modalIssueSummary');
+            const list = document.getElementById('modalFileList');
+            list.innerHTML = '';
+
+            let summaryText = '';
+            if (tooMany) summaryText += `This would bring you to ${wouldBeTotal} files — the maximum is ${maxCount} total (including existing files). `;
+            if (pendingFiles.some(f => !f.valid)) summaryText += `Some files can't be uploaded (wrong type or too large).`;
+            summary.textContent = summaryText;
+
+            pendingFiles.forEach((entry, index) => {
+                const li = document.createElement('li');
+                li.className = 'list-group-item d-flex justify-content-between align-items-center';
+                const sizeMb = (entry.file.size / (1024 * 1024)).toFixed(2);
+
+                const checkWrap = document.createElement('div');
+                checkWrap.className = 'form-check';
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.className = 'form-check-input me-2';
+                checkbox.checked = entry.valid;
+                checkbox.disabled = !entry.valid;
+                checkbox.dataset.index = index;
+                const label = document.createElement('label');
+                label.className = 'form-check-label';
+                label.textContent = `${entry.file.name} (${sizeMb} MB)`;
+                checkWrap.appendChild(checkbox);
+                checkWrap.appendChild(label);
+                li.appendChild(checkWrap);
+
+                if (!entry.valid) {
+                    const badge = document.createElement('span');
+                    badge.className = 'badge bg-danger';
+                    badge.textContent = entry.reason;
+                    li.appendChild(badge);
+                }
+
+                list.appendChild(li);
+            });
+
+            new bootstrap.Modal(document.getElementById('fileIssueModal')).show();
+        }
+
+        document.getElementById('modalContinueBtn').addEventListener('click', function () {
+            const checkboxes = document.querySelectorAll('#modalFileList input[type=checkbox]');
+            const keptFiles = [];
+            checkboxes.forEach(cb => {
+                if (cb.checked) keptFiles.push(pendingFiles[cb.dataset.index].file);
+            });
+
+            if (keptFiles.length === 0) {
+                alert('You must keep at least one file to continue.');
+                return;
+            }
+            if (currentKeptExistingCount() + keptFiles.length > maxCount) {
+                alert(`You can only have ${maxCount} files total.`);
+                return;
+            }
+
+            const dataTransfer = new DataTransfer();
+            keptFiles.forEach(file => dataTransfer.items.add(file));
+            newFilesInput.files = dataTransfer.files;
+
+            finalizeFiles(keptFiles);
+            bootstrap.Modal.getInstance(document.getElementById('fileIssueModal')).hide();
+        });
+
+        document.getElementById('modalCancelBtn').addEventListener('click', function () {
+            newFilesInput.value = '';
+            document.getElementById('selectedFilesList').innerHTML = '';
+            bootstrap.Modal.getInstance(document.getElementById('fileIssueModal')).hide();
+        });
+
+        function finalizeFiles(files) {
+            const listDiv = document.getElementById('selectedFilesList');
+            listDiv.innerHTML = '';
+            const ul = document.createElement('ul');
+            ul.className = 'list-group';
+            files.forEach(file => {
+                const li = document.createElement('li');
+                li.className = 'list-group-item d-flex justify-content-between align-items-center';
+                const sizeMb = (file.size / (1024 * 1024)).toFixed(2);
+                li.innerHTML = `<span>${file.name}</span><span class="text-muted">${sizeMb} MB</span>`;
+                ul.appendChild(li);
+            });
+            listDiv.appendChild(ul);
+        }
+
+        document.getElementById('editForm').addEventListener('submit', function (e) {
+            const removedCount = document.querySelectorAll('.keep-file-checkbox:checked').length;
+            const addedCount = newFilesInput.files.length;
+
+            if (removedCount > 0 || addedCount > 0) {
+                const message = `You are about to remove ${removedCount} file(s) and add ${addedCount} new file(s). Save changes?`;
+                if (!confirm(message)) {
+                    e.preventDefault();
+                }
+            }
+        });
+    </script>
+}

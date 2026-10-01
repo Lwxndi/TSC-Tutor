@@ -1,0 +1,65 @@
+﻿@* Views/StudentAssessment/Index.cshtml *@
+@model List<Tutor_Manager.ViewModels.AssessmentViewmodels.AvailableAssessmentViewModel>
+
+@{
+    ViewData["Title"] = "Available Assessments";
+}
+
+<div class="container mt-4">
+    <h2>Available Assessments</h2>
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+    }
+
+    @if (!Model.Any())
+    {
+        <p class="text-muted">No assessments are currently available to you.</p>
+    }
+    else
+    {
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Opens</th>
+                    <th>Closes</th>
+                    <th>Attempts</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var a in Model)
+                {
+                    <tr>
+                        <td>@a.Title</td>
+                        <td>@a.OpenAt.ToString("dd MMM yyyy HH:mm")</td>
+                        <td>@a.CloseAt.ToString("dd MMM yyyy HH:mm")</td>
+                        <td>@a.SubmittedAttemptCount / @a.MaxAttempts</td>
+                        <td>
+                            @if (a.HasInProgressAttempt)
+                            {
+                                <form asp-controller="StudentAssessment" asp-action="Start" asp-route-assessmentId="@a.AssessmentId" method="post" class="d-inline">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-sm btn-warning">Resume</button>
+                                </form>
+                            }
+                            else if (a.SubmittedAttemptCount < a.MaxAttempts)
+                            {
+                                <form asp-controller="StudentAssessment" asp-action="Start" asp-route-assessmentId="@a.AssessmentId" method="post" class="d-inline">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-sm btn-primary">Start</button>
+                                </form>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary">No attempts left</span>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</div>

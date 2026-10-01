@@ -1,0 +1,79 @@
+﻿@model Tutor_Manager.ViewModels.Sessions.TimetablePreviewFilterViewModel
+@using Tutor_Manager.Models
+@{
+    ViewData["Title"] = "Timetable Preview";
+}
+
+<div class="alert alert-info">
+    <i class="bi bi-info-circle"></i> Preview only — shows how sessions would look across all matching offerings. Nothing is created here.
+</div>
+
+<h2>Timetable Preview</h2>
+
+<form asp-action="TimetablePreview" method="post" class="row g-2 align-items-end mb-4">
+    <div class="col-md-3">
+        <label class="form-label">Subject (optional)</label>
+        <select name="SubjectId" class="form-select">
+            <option value="">All Subjects</option>
+            @foreach (var s in Model.AvailableSubjects)
+            {
+                <option value="@s.SubjectId" selected="@(Model.SubjectId == s.SubjectId)">@s.SubjectName</option>
+            }
+        </select>
+    </div>
+    <div class="col-md-2">
+        <label class="form-label">Grade (optional)</label>
+        <select name="Grade" class="form-select">
+            <option value="">All Grades</option>
+            <option value="@Grade.Grade10" selected="@(Model.Grade == Grade.Grade10)">Grade 10</option>
+            <option value="@Grade.Grade11" selected="@(Model.Grade == Grade.Grade11)">Grade 11</option>
+            <option value="@Grade.Grade12" selected="@(Model.Grade == Grade.Grade12)">Grade 12</option>
+        </select>
+    </div>
+    <div class="col-md-3">
+        <label class="form-label">From</label>
+        <input name="StartDate" type="date" class="form-control" value="@Model.StartDate.ToString("yyyy-MM-dd")" />
+    </div>
+    <div class="col-md-3">
+        <label class="form-label">To</label>
+        <input name="EndDate" type="date" class="form-control" value="@Model.EndDate.ToString("yyyy-MM-dd")" />
+    </div>
+    <div class="col-md-1">
+        <button type="submit" class="btn btn-primary w-100">Preview</button>
+    </div>
+</form>
+
+@if (Model.Preview != null)
+{
+    var all = Model.Preview.ValidCandidates.Concat(Model.Preview.InvalidCandidates)
+        .OrderBy(c => c.Date).ThenBy(c => c.StartTime)
+        .GroupBy(c => c.Date.Date);
+
+    if (!all.Any())
+    {
+        <p class="text-muted">No matching offerings in this range.</p>
+    }
+    else
+    {
+        foreach (var day in all)
+        {
+            <h5 class="mt-4">@day.Key.ToString("dddd, d MMMM yyyy")</h5>
+            <table class="table table-sm">
+                <thead>
+                    <tr><th>Time</th><th>Subject / Grade</th><th>Tutor</th><th>Status</th></tr>
+                </thead>
+                <tbody>
+                    @foreach (var c in day)
+                    {
+                        <tr class="@(c.IsValid ? "" : "table-warning")">
+                            <td>@c.StartTime.ToString(@"hh\:mm")–@c.EndTime.ToString(@"hh\:mm")</td>
+                            <td>@c.SubjectName — Grade @((int)c.Grade)</td>
+                            <td>@c.TutorName</td>
+                            <td>@(c.IsValid ? "OK" : c.Error)</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    }
+}

@@ -1,0 +1,58 @@
+﻿@model List<Tutor_Manager.ViewModels.TutorRecommendationCardViewModel>
+@{
+    ViewData["Title"] = "AI Recommendations";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>AI Recommendations</h2>
+    <form asp-action="GenerateForAllUnassigned" method="post" class="d-inline">
+        <button type="submit" class="btn btn-primary">
+            <i class="bi bi-stars"></i> Generate All
+        </button>
+    </form>
+</div>
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">@TempData["Error"]</div>
+}
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success">@TempData["Success"]</div>
+}
+
+<div class="row g-3">
+    @foreach (var card in Model)
+    {
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100">
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title">@card.TutorName</h5>
+
+                    @if (card.Recommendation == null)
+                    {
+                        <p class="text-muted flex-grow-1">No recommendation yet.</p>
+                        <form asp-action="GenerateForTutor" method="post">
+                            <input type="hidden" name="tutorUserId" value="@card.TutorUserId" />
+                            <button type="submit" class="btn btn-sm btn-outline-primary">Generate</button>
+                        </form>
+                    }
+                    else
+                    {
+                        <div class="flex-grow-1">
+                            @foreach (var rec in card.Recommendation.Recommendations)
+                            {
+                                <span class="badge bg-light text-dark border me-1 mb-1">@rec.SubjectName — Grade @rec.Grade</span>
+                            }
+                            <p class="text-muted small mt-2 mb-0">@card.Recommendation.Reasoning</p>
+                        </div>
+                        <div class="d-flex gap-2 mt-3">
+                            <a asp-action="Subjects" asp-route-id="@card.TutorUserId" class="btn btn-sm btn-outline-secondary">Review</a>
+                            <a asp-action="Subjects" asp-route-id="@card.TutorUserId" class="btn btn-sm btn-success">Assign</a>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+</div>

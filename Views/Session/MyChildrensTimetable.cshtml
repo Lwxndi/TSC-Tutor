@@ -1,0 +1,91 @@
+﻿@model List<Tutor_Manager.ViewModels.Sessions.LearnerTimetableViewModel>
+@using Tutor_Manager.Models.Enums
+@{
+    ViewData["Title"] = "My Children's Timetables";
+    var startDate = (DateTime)ViewBag.StartDate;
+    var endDate = (DateTime)ViewBag.EndDate;
+}
+
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0">My Children's Timetables</h2>
+        <div class="btn-group">
+            <a class="btn btn-outline-secondary"
+               asp-action="MyChildrensTimetable"
+               asp-route-startDate="@startDate.AddDays(-7).ToString("yyyy-MM-dd")"
+               asp-route-endDate="@startDate.AddDays(-1).ToString("yyyy-MM-dd")">&laquo; Previous week</a>
+            <a class="btn btn-outline-secondary"
+               asp-action="MyChildrensTimetable"
+               asp-route-startDate="@DateTime.Today.ToString("yyyy-MM-dd")"
+               asp-route-endDate="@DateTime.Today.AddDays(7).ToString("yyyy-MM-dd")">This week</a>
+            <a class="btn btn-outline-secondary"
+               asp-action="MyChildrensTimetable"
+               asp-route-startDate="@endDate.AddDays(1).ToString("yyyy-MM-dd")"
+               asp-route-endDate="@endDate.AddDays(7).ToString("yyyy-MM-dd")">Next week &raquo;</a>
+        </div>
+    </div>
+
+    <p class="text-muted">Showing @startDate.ToString("dd MMM yyyy") – @endDate.ToString("dd MMM yyyy")</p>
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-light border">No linked learners found.</div>
+    }
+    else
+    {
+        <ul class="nav nav-tabs mb-3">
+            @for (int i = 0; i < Model.Count; i++)
+            {
+                <li class="nav-item">
+                    <a class="nav-link @(i == 0 ? "active" : "")" data-bs-toggle="tab" href="#learner-@i">
+                        @Model[i].LearnerName
+                    </a>
+                </li>
+            }
+        </ul>
+
+        <div class="tab-content">
+            @for (int i = 0; i < Model.Count; i++)
+            {
+                var learner = Model[i];
+                var byDay = learner.Sessions.GroupBy(s => s.Date.Date).OrderBy(g => g.Key).ToList();
+
+                <div class="tab-pane fade @(i == 0 ? "show active" : "")" id="learner-@i">
+                    @if (!learner.Sessions.Any())
+                    {
+                        <div class="alert alert-light border">No sessions scheduled for @learner.LearnerName in this period.</div>
+                    }
+                    else
+                    {
+                        @foreach (var day in byDay)
+                        {
+                            <div class="card mb-3">
+                                <div class="card-header">
+                                    <strong>@day.Key.ToString("dddd, dd MMM yyyy")</strong>
+                                </div>
+                                <ul class="list-group list-group-flush">
+                                    @foreach (var session in day.OrderBy(s => s.StartTime))
+                                    {
+                                        <li class="list-group-item">
+                                            <strong>@session.StartTime.ToString(@"hh\:mm")–@session.EndTime.ToString(@"hh\:mm")</strong>
+                                            — @session.SubjectName with @session.TutorName
+                                            @if (session.Status != SessionStatus.Scheduled)
+                                            {
+                                                <span class="badge bg-secondary ms-1">@session.Status</span>
+                                            }
+                                            @if (!string.IsNullOrEmpty(session.JitsiLink))
+                                            {
+                                                <br />
+                                                <a href="@session.JitsiLink" target="_blank" class="small">Join session link</a>
+                                            }
+                                        </li>
+                                    }
+                                </ul>
+                            </div>
+                        }
+                    }
+                </div>
+            }
+        </div>
+    }
+</div>

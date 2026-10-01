@@ -1,0 +1,76 @@
+﻿@model List<Tutor_Manager.Models.Enrollment>
+@using Tutor_Manager.Models.Enums
+
+@{
+    ViewData["Title"] = "Enrollment Requests";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>Enrollment Requests</h2>
+        <a asp-controller="AdminEnrollment" asp-action="Create" class="btn btn-primary">Enroll Learner Directly</a>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+    }
+    @if (TempData["WarningMessages"] != null)
+    {
+        <div class="alert alert-warning">@TempData["WarningMessages"]</div>
+    }
+
+    @if (!Model.Any())
+    {
+        <p class="text-muted">No enrollment requests awaiting review.</p>
+    }
+    else
+    {
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Learner</th>
+                    <th>Offering</th>
+                    <th>Status</th>
+                    <th>Delivery Mode</th>
+                    <th>Requested At</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var enrollment in Model)
+                {
+                    <tr>
+                        <td>@enrollment.Learner.User.FirstName @enrollment.Learner.User.LastName</td>
+                        <td>@enrollment.Offering.Subject.SubjectName — Grade @enrollment.Offering.Grade</td>
+                        <td>
+                            <span class="badge bg-secondary">@enrollment.Status</span>
+                            @* NEW — this queue now also carries Active/Suspended rows that have a
+                               pending Guardian request (see GetPendingForAdminAsync). Without a
+                               marker here, a row showing plain "Active" gives no clue why it's
+                               in the review queue at all. *@
+                            @if (enrollment.RequestedOfferingId != null)
+                            {
+                                <span class="badge bg-primary">Change requested</span>
+                            }
+                            @if (enrollment.WithdrawalRequestedAt != null)
+                            {
+                                <span class="badge bg-danger">Withdrawal requested</span>
+                            }
+                        </td>
+                        <td>@enrollment.DeliveryMode</td>
+                        <td>@enrollment.RequestedAt.ToLocalTime().ToString("dd MMM yyyy, HH:mm")</td>
+                        <td>
+                            <a asp-controller="AdminEnrollment" asp-action="Details" asp-route-id="@enrollment.EnrollmentId"
+                               class="btn btn-sm btn-outline-primary">Review</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</div>

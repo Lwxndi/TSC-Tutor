@@ -286,24 +286,25 @@ namespace Tutor_Manager.Controllers
                 _context.Tutors.Add(tutor);
                 await _context.SaveChangesAsync();
 
-                foreach (var appSubject in application.Subjects)
-                {
-                    var grades = appSubject.GradeLevels
-                        .Split(',')
-                        .Select(g => g.Trim())
-                        .Where(g => byte.TryParse(g, out _))
-                        .Select(byte.Parse);
+                //foreach (var appSubject in application.Subjects)
+                //{
+                //    var grades = appSubject.GradeLevels
+                //        .Split(',')
+                //        .Select(g => g.Trim())
+                //        .Where(g => byte.TryParse(g, out _))
+                //        .Select(byte.Parse);
 
-                    foreach (var grade in grades)
-                    {
-                        _context.TutorSubjects.Add(new TutorSubject
-                        {
-                            TutorUserId = tutor.UserId,
-                            SubjectId = appSubject.SubjectId,
-                            GradeLevel = grade
-                        });
-                    }
-                }
+                //    foreach (var grade in grades)
+                //    {
+                //        _context.TutorSubjects.Add(new TutorSubject
+                //        {
+                //            TutorUserId = tutor.UserId,
+                //            SubjectId = appSubject.SubjectId,
+                //            GradeLevel = (Grade)grade
+                //        });
+                //    }
+                //} MIGHT DELETE CAUSE IT LOOKS LIKE ITS NOT WORKING 
+
 
                 application.CreatedTutorId = tutor.UserId;
                 application.Status = ApplicationStatus.Approved;

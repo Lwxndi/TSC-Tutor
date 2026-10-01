@@ -1,0 +1,708 @@
+﻿@* @model Tutor_Manager.ViewModels.OfferingEditViewModel
+@using Tutor_Manager.Models
+@using Tutor_Manager.Models.Enums
+@{
+    ViewData["Title"] = "Add Offering";
+}
+
+<h2>Add Offering</h2>
+
+<div asp-validation-summary="All" class="text-danger"></div>
+<div class="alert alert-secondary">
+    <strong><i class="bi bi-info-circle"></i> Scheduling Rules</strong>
+    <ul class="mb-0 mt-2 small">
+        <li>One-on-one tutoring must be Online — physical one-on-one is not permitted.</li>
+        <li>Weekday sessions: Physical Group 15:30–17:00 · Online Group 15:30–20:00 · Online One-on-One 15:30–18:00</li>
+        <li>Weekend sessions: 07:00–17:00 for all types</li>
+        <li>If teaching days span both weekday and weekend, the start time must fit inside <em>both</em> windows</li>
+        <li>Session duration: 60–150 minutes</li>
+        <li>A tutor can teach at most 4 sessions, 2 subjects, and 8 hours per day, and 2 subjects and 40 hours per week</li>
+    </ul>
+</div>
+
+<form asp-action="Create" method="post">
+    <div class="row g-3">
+        <div class="col-md-4">
+            <label class="form-label">Subject</label>
+            <select asp-for="SubjectId" class="form-select">
+                @foreach (var s in Model.AvailableSubjects)
+                {
+                    <option value="@s.SubjectId">@s.SubjectName</option>
+                }
+            </select>
+        </div>
+        <div class="col-12">
+            <div id="existingOfferingsPanel" class="alert alert-light border" style="display:none;">
+                <strong>Existing offerings for this Subject:</strong>
+                <div id="existingOfferingsList" class="mt-2"></div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <label class="form-label">Grade</label>
+            <select asp-for="Grade" class="form-select">
+                <option value="@Grade.Grade10">Grade 10</option>
+                <option value="@Grade.Grade11">Grade 11</option>
+                <option value="@Grade.Grade12">Grade 12</option>
+            </select>
+        </div>
+
+        <div class="col-md-4">
+            <label class="form-label">Tutor</label>
+            <select asp-for="TutorUserId" class="form-select">
+                @foreach (var t in Model.AvailableTutors)
+                {
+                    <option value="@t.TutorUserId">@t.FullName</option>
+                }
+            </select>
+        </div>
+
+        <div class="col-md-4">
+            <label class="form-label">Type</label>
+            <select asp-for="Type" class="form-select" id="offeringType">
+                <option value="@OfferingType.Group">Group</option>
+                <option value="@OfferingType.OneOnOne">One-on-One</option>
+            </select>
+        </div>
+
+        <div class="col-md-4">
+            <label class="form-label">Capacity</label>
+            <input asp-for="Capacity" type="number" class="form-control" id="capacityInput" />
+        </div>
+
+        <div class="col-md-4">
+            <label class="form-label">Delivery Method</label>
+            <select asp-for="DeliveryMethod" class="form-select">
+                <option value="@DeliveryMethod.Physical">Physical</option>
+                <option value="@DeliveryMethod.Remote">Remote</option>
+            </select>
+        </div>
+        <div class="col-md-4">
+            <label class="form-label">Start Time</label>
+            <input asp-for="StartTime" type="time" class="form-control" />
+            <span asp-validation-for="StartTime" class="text-danger"></span>
+        </div>
+
+        <div class="col-md-4">
+            <label class="form-label">Duration (minutes)</label>
+            <input asp-for="DurationMinutes" type="number" class="form-control" />
+        </div>
+
+        <div class="col-md-4">
+            <label class="form-label">Price (R)</label>
+            <input asp-for="Price" type="number" step="0.01" class="form-control" />
+        </div>
+
+        <div class="col-12">
+            <label class="form-label">Teaching Days</label>
+            <div class="d-flex gap-3 flex-wrap">
+                @foreach (var day in Enum.GetValues<DayOfWeek>())
+                {
+                    <div class="form-check">
+                        <input type="checkbox" class="form-check-input" name="SelectedTeachingDays"
+                               value="@day" id="day_@day"
+                               checked="@(Model.SelectedTeachingDays.Contains(day))" />
+                        <label class="form-check-label" for="day_@day">@day</label>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="col-12">
+            <div class="form-check">
+                <input asp-for="IsActive" class="form-check-input" />
+                <label asp-for="IsActive" class="form-check-label"></label>
+            </div>
+        </div>
+    </div>
+
+    <button type="submit" class="btn btn-primary mt-3">Save</button>
+    <a asp-action="Index" class="btn btn-secondary mt-3">Cancel</a>
+</form>
+
+<script>
+    const typeSelect = document.getElementById('offeringType');
+    const capacityInput = document.getElementById('capacityInput');
+    const subjectSelect = document.querySelector('select[name="SubjectId"]');
+    const gradeSelect = document.querySelector('select[name="Grade"]');
+    const tutorSelect = document.querySelector('select[name="TutorUserId"]');
+
+
+    async function refreshTutors() {
+        const subjectId = subjectSelect.value;
+        const grade = gradeSelect.value;
+
+        if (!subjectId) {
+            tutorSelect.innerHTML = '<option value="">-- Select a subject first --</option>';
+            return;
+        }
+
+        const url = `/Offering/GetEligibleTutors?subjectId=${subjectId}&grade=${grade}`;
+        const res = await fetch(url);
+        const tutors = await res.json();
+
+        const currentValue = tutorSelect.value;
+        tutorSelect.innerHTML = '';
+
+        if (tutors.length === 0) {
+            tutorSelect.innerHTML = '<option value="">-- No eligible tutors --</option>';
+            return;
+        }
+
+        tutors.forEach(t => {
+            const opt = document.createElement('option');
+            opt.value = t.tutorUserId;
+            opt.textContent = t.fullName;
+            tutorSelect.appendChild(opt);
+        });
+
+        // Preserve current selection if still valid (relevant on Edit page load)
+        if ([...tutorSelect.options].some(o => o.value == currentValue)) {
+            tutorSelect.value = currentValue;
+        }
+    }
+
+    function syncCapacity() {
+        if (typeSelect.value === '@OfferingType.OneOnOne') {
+            capacityInput.value = 1;
+            capacityInput.disabled = true;
+        } else {
+            capacityInput.disabled = false;
+        }
+    }
+    subjectSelect.addEventListener('change', refreshTutors);
+    gradeSelect.addEventListener('change', refreshTutors);
+
+    // Run once on page load so Edit page shows the right filtered list immediately
+    refreshTutors();
+    typeSelect.addEventListener('change', syncCapacity);
+    syncCapacity();
+</script>
+<script>
+    const subjectSelectForPreview = document.querySelector('select[name="SubjectId"]');
+    const panel = document.getElementById('existingOfferingsPanel');
+    const list = document.getElementById('existingOfferingsList');
+
+    async function refreshExistingOfferings() {
+        const subjectId = subjectSelectForPreview.value;
+
+        if (!subjectId) {
+            panel.style.display = 'none';
+            return;
+        }
+
+        const res = await fetch(`/Offering/GetOfferingsForSubject?subjectId=${subjectId}`);
+        const offerings = await res.json();
+
+        if (offerings.length === 0) {
+            list.innerHTML = '<span class="text-muted">No existing offerings yet for this subject.</span>';
+        } else {
+            list.innerHTML = offerings.map(o => `
+                    <div class="d-flex justify-content-between border-bottom py-1">
+                        <span>Grade ${o.grade} — ${o.tutorName} — ${o.type} — ${o.deliveryMethod}</span>
+                        <span class="text-muted">${o.teachingDays.join(', ')}${o.isActive ? '' : ' (Inactive)'}</span>
+                    </div>
+                `).join('');
+        }
+
+        panel.style.display = 'block';
+    }
+
+    subjectSelectForPreview.addEventListener('change', refreshExistingOfferings);
+    refreshExistingOfferings();
+</script>
+<script>
+    // Static mirror of the OfferingTimeWindow seed data, just for a live hint —
+    // the real enforcement always happens server-side in OfferingService.
+    const windows = {
+        "Weekday|Physical|Group": ["15:30", "17:00"],
+        "Weekday|Remote|Group": ["15:30", "20:00"],
+        "Weekday|Remote|OneOnOne": ["15:30", "18:00"],
+        "Weekend|Physical|Group": ["07:00", "17:00"],
+        "Weekend|Remote|Group": ["07:00", "17:00"],
+        "Weekend|Remote|OneOnOne": ["07:00", "17:00"]
+    };
+
+    const deliverySelect = document.querySelector('select[name="DeliveryMethod"]');
+    const dayCheckboxes = document.querySelectorAll('input[name="SelectedTeachingDays"]');
+    const hintEl = document.createElement('div');
+    hintEl.className = 'form-text';
+    document.querySelector('input[name="StartTime"]').after(hintEl);
+
+    function showWindowHint() {
+        const delivery = deliverySelect.value;
+        const type = typeSelect.value;
+        const checkedDays = [...dayCheckboxes].filter(c => c.checked).map(c => c.value);
+
+        if (delivery === 'Physical' && type === 'OneOnOne') {
+            hintEl.textContent = 'One-on-one tutoring cannot be delivered in person.';
+            hintEl.className = 'form-text text-danger';
+            return;
+        }
+
+        const weekendDays = ['Saturday', 'Sunday'];
+        let start = null, end = null;
+
+        for (const day of checkedDays) {
+            const dayType = weekendDays.includes(day) ? 'Weekend' : 'Weekday';
+            const key = `${dayType}|${delivery}|${type}`;
+            const window = windows[key];
+
+            if (!window) continue;
+
+            if (start === null || window[0] > start) start = window[0];
+            if (end === null || window[1] < end) end = window[1];
+        }
+
+        if (start && end && start < end) {
+            hintEl.textContent = `Allowed time for the selected days: ${start}–${end}`;
+            hintEl.className = 'form-text text-muted';
+        } else if (checkedDays.length > 0) {
+            hintEl.textContent = 'Selected days have no overlapping time window.';
+            hintEl.className = 'form-text text-danger';
+        } else {
+            hintEl.textContent = '';
+        }
+    }
+
+    deliverySelect.addEventListener('change', showWindowHint);
+    typeSelect.addEventListener('change', showWindowHint);
+    dayCheckboxes.forEach(cb => cb.addEventListener('change', showWindowHint));
+    showWindowHint();
+</script> *@
+
+
+        @model Tutor_Manager.ViewModels.OfferingEditViewModel
+@using Tutor_Manager.Models
+@using Tutor_Manager.Models.Enums
+@{
+    ViewData["Title"] = "Add Offering";
+}
+
+<h2>Add Offering</h2>
+
+<div asp-validation-summary="All" class="text-danger"></div>
+<div class="alert alert-secondary">
+    <strong><i class="bi bi-info-circle"></i> Scheduling Rules</strong>
+    <ul class="mb-0 mt-2 small">
+        <li>One-on-one tutoring must be Online — physical one-on-one is not permitted.</li>
+        <li>Weekday sessions: Physical Group 15:30–17:00 · Online Group 15:30–20:00 · Online One-on-One 15:30–18:00</li>
+        <li>Weekend sessions: 07:00–17:00 for all types</li>
+        <li>Each teaching day is validated against its own applicable window — a Monday and a Saturday can run at different times on the same offering</li>
+        <li>Session duration: 60–150 minutes</li>
+        <li>A tutor can teach at most 4 sessions, 2 subjects, and 8 hours per day, and 2 subjects and 40 hours per week</li>
+    </ul>
+</div>
+
+<form asp-action="Create" method="post">
+    <div class="row g-3">
+        <div class="col-md-4">
+            <label class="form-label">Subject</label>
+            <select asp-for="SubjectId" class="form-select">
+                @foreach (var s in Model.AvailableSubjects)
+                {
+                    <option value="@s.SubjectId">@s.SubjectName</option>
+                }
+            </select>
+        </div>
+        <div class="col-12">
+            <div id="existingOfferingsPanel" class="alert alert-light border" style="display:none;">
+                <strong>Existing offerings for this Subject:</strong>
+                <div id="existingOfferingsList" class="mt-2"></div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <label class="form-label">Grade</label>
+            <select asp-for="Grade" class="form-select">
+                <option value="@Grade.Grade10">Grade 10</option>
+                <option value="@Grade.Grade11">Grade 11</option>
+                <option value="@Grade.Grade12">Grade 12</option>
+            </select>
+        </div>
+
+        <div class="col-md-4">
+            <label class="form-label">Tutor</label>
+            <select asp-for="TutorUserId" class="form-select">
+                @foreach (var t in Model.AvailableTutors)
+                {
+                    <option value="@t.TutorUserId">@t.FullName</option>
+                }
+            </select>
+        </div>
+
+        <div class="col-md-4">
+            <label class="form-label">Type</label>
+            <select asp-for="Type" class="form-select" id="offeringType">
+                <option value="@OfferingType.Group">Group</option>
+                <option value="@OfferingType.OneOnOne">One-on-One</option>
+            </select>
+        </div>
+
+        <div class="col-md-4">
+            <label class="form-label">Capacity</label>
+            <input asp-for="Capacity" type="number" class="form-control" id="capacityInput" />
+        </div>
+
+        <div class="col-md-4">
+            <label class="form-label">Delivery Method</label>
+            <select asp-for="DeliveryMethod" class="form-select">
+                <option value="@DeliveryMethod.Physical">Physical</option>
+                <option value="@DeliveryMethod.Remote">Remote</option>
+            </select>
+        </div>
+
+        <div class="col-md-4">
+            <label class="form-label">Weekday start time</label>
+            <input asp-for="WeekdayStartTime" type="time" class="form-control" />
+            <span asp-validation-for="WeekdayStartTime" class="text-danger"></span>
+            <div class="form-text">Applied to every selected weekday, unless overridden below.</div>
+        </div>
+
+        <div class="col-md-4">
+            <label class="form-label">Weekend start time</label>
+            <input asp-for="WeekendStartTime" type="time" class="form-control" />
+            <span asp-validation-for="WeekendStartTime" class="text-danger"></span>
+            <div class="form-text">Applied to every selected weekend day, unless overridden below.</div>
+        </div>
+
+        <div class="col-md-4">
+            <label class="form-label">Duration (minutes)</label>
+            <input asp-for="DurationMinutes" type="number" class="form-control" />
+        </div>
+
+        <div class="col-md-4">
+            <label class="form-label">Price (R)</label>
+            <input asp-for="Price" type="number" step="0.01" class="form-control" />
+        </div>
+
+        <div class="col-12">
+            <label class="form-label">Teaching Days</label>
+            <div class="d-flex flex-column gap-2">
+                @foreach (var day in Enum.GetValues<DayOfWeek>())
+                {
+                    var overrideValue = Model.DayOverrides.GetValueOrDefault(day);
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="form-check" style="min-width: 130px;">
+                            <input type="checkbox" class="form-check-input day-checkbox" name="SelectedTeachingDays"
+                                   value="@day" id="day_@day"
+                                   checked="@(Model.SelectedTeachingDays.Contains(day))" />
+                            <label class="form-check-label" for="day_@day">@day</label>
+                        </div>
+                        <div class="d-flex align-items-center gap-2 day-override-row" data-day="@day" style="@(Model.SelectedTeachingDays.Contains(day) ? "" : "display:none;")">
+                            <label class="form-text mb-0" for="override_@day">Override time:</label>
+                            <input type="time" class="form-control form-control-sm day-override-input" style="width: 130px;"
+                                   name="DayOverrides[@day]" id="override_@day"
+                                   value="@(overrideValue.HasValue ? overrideValue.Value.ToString(@"hh\:mm") : "")" />
+                            <span class="form-text mb-0 day-window-hint" data-day="@day"></span>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="col-12">
+            <div class="form-check">
+                <input asp-for="IsActive" class="form-check-input" />
+                <label asp-for="IsActive" class="form-check-label"></label>
+            </div>
+        </div>
+
+        @* Legacy StartTime field — kept hidden and auto-synced from the first
+           selected day's resolved time, since Offering.StartTime is still the
+           fallback column read elsewhere in the codebase. Not shown to the admin
+           directly; they use Weekday/Weekend/override fields above instead. *@
+        <input asp-for="StartTime" type="hidden" id="legacyStartTime" />
+    </div>
+
+    <button type="submit" class="btn btn-primary mt-3">Save</button>
+    <a asp-action="Index" class="btn btn-secondary mt-3">Cancel</a>
+</form>
+
+<script>
+    // ---- Shared element refs ----
+    const typeSelect = document.getElementById('offeringType');
+    const capacityInput = document.getElementById('capacityInput');
+    const subjectSelect = document.querySelector('select[name="SubjectId"]');
+    const gradeSelect = document.querySelector('select[name="Grade"]');
+    const tutorSelect = document.querySelector('select[name="TutorUserId"]');
+    const deliverySelect = document.querySelector('select[name="DeliveryMethod"]');
+    const durationInput = document.querySelector('input[name="DurationMinutes"]');
+    const weekdayInput = document.querySelector('input[name="WeekdayStartTime"]');
+    const weekendInput = document.querySelector('input[name="WeekendStartTime"]');
+    const dayCheckboxes = document.querySelectorAll('.day-checkbox');
+    const overrideRows = document.querySelectorAll('.day-override-row');
+    const overrideInputs = document.querySelectorAll('.day-override-input');
+    const legacyStartTime = document.getElementById('legacyStartTime');
+    const panel = document.getElementById('existingOfferingsPanel');
+    const list = document.getElementById('existingOfferingsList');
+    const submitBtn = document.querySelector('button[type="submit"]');
+    const weekendDays = ['Saturday', 'Sunday'];
+
+    // ---- Tutor list, filtered by subject/grade ----
+    async function refreshTutors() {
+        const subjectId = subjectSelect.value;
+        const grade = gradeSelect.value;
+
+        if (!subjectId) {
+            tutorSelect.innerHTML = '<option value="">-- Select a subject first --</option>';
+            return;
+        }
+
+        const res = await fetch(`/Offering/GetEligibleTutors?subjectId=${subjectId}&grade=${grade}`);
+        const tutors = await res.json();
+
+        const currentValue = tutorSelect.value;
+        tutorSelect.innerHTML = '';
+
+        if (tutors.length === 0) {
+            tutorSelect.innerHTML = '<option value="">-- No eligible tutors --</option>';
+            return;
+        }
+
+        tutors.forEach(t => {
+            const opt = document.createElement('option');
+            opt.value = t.tutorUserId;
+            opt.textContent = t.fullName;
+            tutorSelect.appendChild(opt);
+        });
+
+        if ([...tutorSelect.options].some(o => o.value == currentValue)) {
+            tutorSelect.value = currentValue;
+        }
+    }
+
+    // ---- Capacity lock for OneOnOne ----
+    function syncCapacity() {
+        if (typeSelect.value === '@OfferingType.OneOnOne') {
+            capacityInput.value = 1;
+            capacityInput.disabled = true;
+        } else {
+            capacityInput.disabled = false;
+        }
+    }
+
+    // ---- Time-window hints (display only; real enforcement is server-side) ----
+    const windows = {
+        "Weekday|Physical|Group": ["15:30", "17:00"],
+        "Weekday|Remote|Group": ["15:30", "20:00"],
+        "Weekday|Remote|OneOnOne": ["15:30", "18:00"],
+        "Weekend|Physical|Group": ["07:00", "17:00"],
+        "Weekend|Remote|Group": ["07:00", "17:00"],
+        "Weekend|Remote|OneOnOne": ["07:00", "17:00"]
+    };
+
+    function windowFor(day) {
+        const dayType = weekendDays.includes(day) ? 'Weekend' : 'Weekday';
+        const key = `${dayType}|${deliverySelect.value}|${typeSelect.value}`;
+        return windows[key];
+    }
+
+    function showDayHints() {
+        overrideRows.forEach(row => {
+            const day = row.dataset.day;
+            const hintEl = row.querySelector('.day-window-hint');
+            const window = windowFor(day);
+
+            if (deliverySelect.value === 'Physical' && typeSelect.value === 'OneOnOne') {
+                hintEl.textContent = 'One-on-one cannot be Physical.';
+                hintEl.className = 'form-text mb-0 day-window-hint text-danger';
+                return;
+            }
+
+            if (window) {
+                hintEl.textContent = `Allowed: ${window[0]}–${window[1]}`;
+                hintEl.className = 'form-text mb-0 day-window-hint text-muted';
+            } else {
+                hintEl.textContent = 'No window configured.';
+                hintEl.className = 'form-text mb-0 day-window-hint text-danger';
+            }
+        });
+    }
+
+    function toggleOverrideRows() {
+        dayCheckboxes.forEach(cb => {
+            const row = document.querySelector(`.day-override-row[data-day="${cb.value}"]`);
+            row.style.display = cb.checked ? 'flex' : 'none';
+        });
+    }
+
+    function syncLegacyStartTime() {
+        const checked = [...dayCheckboxes].filter(cb => cb.checked);
+        if (checked.length === 0) return;
+
+        const firstDay = checked[0].value;
+        const overrideInput = document.getElementById(`override_${firstDay}`);
+        const isWeekend = weekendDays.includes(firstDay);
+        const tiered = isWeekend ? weekendInput.value : weekdayInput.value;
+
+        legacyStartTime.value = overrideInput.value || tiered || '00:00';
+    }
+
+    // ---- Live existing-offerings table + draft row ----
+    let existingOfferingsCache = [];
+    let latestCheckToken = 0;
+    let lastCheckResult = { isValid: true, error: null };
+
+    function getSelectedDays() {
+        return [...dayCheckboxes].filter(cb => cb.checked).map(cb => cb.value);
+    }
+
+    function getDayOverrides() {
+        const overrides = {};
+        overrideInputs.forEach(input => {
+            const day = input.closest('.day-override-row').dataset.day;
+            if (input.value) overrides[day] = input.value;
+        });
+        return overrides;
+    }
+
+    function renderTable() {
+        const rows = existingOfferingsCache.map(o => `
+            <div class="d-flex justify-content-between border-bottom py-1">
+                <span>Grade ${o.grade} — ${o.tutorName} — ${o.type} — ${o.deliveryMethod}</span>
+                <span class="text-muted">${o.teachingDays.join(', ')}${o.isActive ? '' : ' (Inactive)'}</span>
+            </div>
+        `);
+
+        const selectedDays = getSelectedDays();
+        const tutorName = tutorSelect.options[tutorSelect.selectedIndex]?.textContent || '';
+        if (tutorSelect.value && selectedDays.length) {
+            rows.push(`
+                <div class="d-flex justify-content-between py-1 bg-light-subtle" style="border-top:2px dashed #999;">
+                    <span><strong>New (unsaved):</strong> ${tutorName} — ${typeSelect.value} — ${deliverySelect.value}</span>
+                    <span class="text-muted">${selectedDays.join(', ')}</span>
+                </div>
+            `);
+        }
+
+        list.innerHTML = rows.length
+            ? rows.join('')
+            : '<span class="text-muted">No existing offerings yet for this subject.</span>';
+
+        panel.style.display = 'block';
+    }
+
+    async function refreshExistingOfferings() {
+        const subjectId = subjectSelect.value;
+
+        if (!subjectId) {
+            existingOfferingsCache = [];
+            panel.style.display = 'none';
+            return;
+        }
+
+        const res = await fetch(`/Offering/GetOfferingsForSubject?subjectId=${subjectId}`);
+        existingOfferingsCache = await res.json();
+        renderTable();
+    }
+
+    // ---- Live tutor-load validation ----
+    function showValidationMessage(message) {
+        let box = document.getElementById('tutorLoadWarning');
+        if (!box) {
+            box = document.createElement('div');
+            box.id = 'tutorLoadWarning';
+            box.className = 'alert alert-danger mt-2';
+            panel.after(box);
+        }
+        if (message) {
+            box.textContent = message;
+            box.style.display = 'block';
+        } else {
+            box.style.display = 'none';
+        }
+    }
+
+    function updateSubmitState() {
+        submitBtn.disabled = !lastCheckResult.isValid;
+    }
+
+    async function checkTutorLoad() {
+        const token = ++latestCheckToken;
+
+        const tutorUserId = parseInt(tutorSelect.value) || 0;
+        const subjectId = parseInt(subjectSelect.value) || 0;
+        const days = getSelectedDays();
+
+        if (!tutorUserId || !subjectId || days.length === 0) {
+            lastCheckResult = { isValid: true, error: null };
+            showValidationMessage(null);
+            updateSubmitState();
+            return;
+        }
+
+        const payload = {
+            OfferingId: 0,
+            TutorUserId: tutorUserId,
+            SubjectId: subjectId,
+            Type: typeSelect.value,
+            DeliveryMethod: deliverySelect.value,
+            SelectedTeachingDays: days,
+            DayOverrides: getDayOverrides(),
+            WeekdayStartTime: weekdayInput.value || null,
+            WeekendStartTime: weekendInput.value || null,
+            StartTime: legacyStartTime.value || '00:00',
+            DurationMinutes: parseInt(durationInput.value) || 0
+        };
+
+        const res = await fetch('/Offering/CheckTutorLoad', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        if (token !== latestCheckToken) return;
+
+        const result = await res.json();
+        lastCheckResult = result;
+        showValidationMessage(result.isValid ? null : result.error);
+        updateSubmitState();
+    }
+
+    function onRelevantFieldChange() {
+        renderTable();
+        checkTutorLoad();
+    }
+
+    async function onSubjectChange() {
+        await refreshTutors();
+        await refreshExistingOfferings();
+        onRelevantFieldChange();
+    }
+
+    // ---- Wiring ----
+    subjectSelect.addEventListener('change', onSubjectChange);
+    gradeSelect.addEventListener('change', refreshTutors);
+    typeSelect.addEventListener('change', () => { syncCapacity(); showDayHints(); onRelevantFieldChange(); });
+    deliverySelect.addEventListener('change', () => { showDayHints(); onRelevantFieldChange(); });
+    tutorSelect.addEventListener('change', onRelevantFieldChange);
+    durationInput.addEventListener('input', onRelevantFieldChange);
+    weekdayInput.addEventListener('input', () => { syncLegacyStartTime(); onRelevantFieldChange(); });
+    weekendInput.addEventListener('input', () => { syncLegacyStartTime(); onRelevantFieldChange(); });
+    dayCheckboxes.forEach(cb => cb.addEventListener('change', () => {
+        toggleOverrideRows();
+        syncLegacyStartTime();
+        onRelevantFieldChange();
+    }));
+    overrideInputs.forEach(input => input.addEventListener('input', () => {
+        syncLegacyStartTime();
+        onRelevantFieldChange();
+    }));
+
+    document.querySelector('form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        await checkTutorLoad();
+        if (lastCheckResult.isValid) {
+            e.target.submit();
+        }
+    });
+
+    // ---- Init ----
+    refreshTutors();
+    syncCapacity();
+    toggleOverrideRows();
+    showDayHints();
+    syncLegacyStartTime();
+    refreshExistingOfferings();
+</script>

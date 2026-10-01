@@ -1,0 +1,147 @@
+﻿@model List<Tutor_Manager.ViewModels.OfferingListItemViewModel>
+@using Tutor_Manager.Helpers
+@using Tutor_Manager.ViewModels
+@using Tutor_Manager.Services
+@using Tutor_Manager.Models.Enums
+@{
+    ViewData["Title"] = "Tutoring Offerings";
+    var subjects = (List<SubjectDropdownItem>)ViewBag.Subjects;
+    var tutors = (List<TutorDropdownItem>)ViewBag.Tutors;
+    var filter = (OfferingFilterViewModel)ViewBag.Filter;
+    var hasActiveFilter = filter?.SubjectId != null || filter?.Grade != null || filter?.TutorUserId != null
+                          || filter?.Type != null || filter?.DeliveryMethod != null || filter?.IsActive != null;
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>Offerings</h2>
+    <div>
+        <button class="btn btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#filterPanel">
+            <i class="bi bi-funnel"></i> Filter
+        </button>
+        <a asp-controller="Session" asp-action="TimetablePreview" class="btn btn-outline-info">
+            <i class="bi bi-calendar-week"></i> Timetable Preview
+        </a>
+        <a asp-action="Create" class="btn btn-primary">
+            <i class="bi bi-plus-lg"></i> Add Offering
+        </a>
+    </div>
+</div>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success">@TempData["Success"]</div>
+}
+
+<div class="collapse @(hasActiveFilter ? "show" : "")" id="filterPanel">
+    <div class="card card-body mb-4">
+        <form method="get" class="row g-2 align-items-end">
+            <div class="col-md-2">
+                <label class="form-label">Subject</label>
+                <select name="SubjectId" class="form-select">
+                    <option value="">All</option>
+                    @foreach (var s in subjects)
+                    {
+                        <option value="@s.SubjectId" selected="@(filter?.SubjectId == s.SubjectId)">@s.SubjectName</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Grade</label>
+                <select name="Grade" class="form-select">
+                    <option value="">All</option>
+                    <option value="@Grade.Grade10" selected="@(filter?.Grade == Grade.Grade10)">Grade 10</option>
+                    <option value="@Grade.Grade11" selected="@(filter?.Grade == Grade.Grade11)">Grade 11</option>
+                    <option value="@Grade.Grade12" selected="@(filter?.Grade == Grade.Grade12)">Grade 12</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Tutor</label>
+                <select name="TutorUserId" class="form-select">
+                    <option value="">All</option>
+                    @foreach (var t in tutors)
+                    {
+                        <option value="@t.TutorUserId" selected="@(filter?.TutorUserId == t.TutorUserId)">@t.FullName</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Type</label>
+                <select name="Type" class="form-select">
+                    <option value="">All</option>
+                    <option value="@OfferingType.Group" selected="@(filter?.Type == OfferingType.Group)">Group</option>
+                    <option value="@OfferingType.OneOnOne" selected="@(filter?.Type == OfferingType.OneOnOne)">One-on-One</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Delivery</label>
+                <select name="DeliveryMethod" class="form-select">
+                    <option value="">All</option>
+                    <option value="@DeliveryMethod.Physical" selected="@(filter?.DeliveryMethod == DeliveryMethod.Physical)">Physical</option>
+                    <option value="@DeliveryMethod.Remote" selected="@(filter?.DeliveryMethod == DeliveryMethod.Remote)">Remote</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Status</label>
+                <select name="IsActive" class="form-select">
+                    <option value="">All</option>
+                    <option value="true" selected="@(filter?.IsActive == true)">Active</option>
+                    <option value="false" selected="@(filter?.IsActive == false)">Inactive</option>
+                </select>
+            </div>
+            <div class="col-12 d-flex gap-2 mt-2">
+                <button type="submit" class="btn btn-primary">Apply</button>
+                <a asp-action="Index" class="btn btn-outline-secondary">Clear</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<table class="table table-hover align-middle">
+    <thead>
+        <tr>
+            <th>Subject / Grade</th>
+            <th>Tutor</th>
+            <th>Type</th>
+            <th>Capacity</th>
+            <th>Delivery</th>
+            <th>Teaching Days</th>
+            <th>Price</th>
+            <th>Status</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var o in Model)
+        {
+            <tr>
+                <td>@o.SubjectName — Grade @((int)o.Grade)</td>
+                <td>@o.TutorName</td>
+                <td>@o.Type</td>
+                <td>@o.Capacity</td>
+                <td>@o.DeliveryMethod</td>
+                <td>@string.Join(", ", o.TeachingDays)</td>
+                <td>@MoneyFormat.ZAR(o.Price)</td>
+                <td>
+                    @if (o.IsActive)
+                    {
+                        <span class="badge bg-success">Active</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-secondary">Inactive</span>
+                    }
+                </td>
+                <td class="text-end">
+                    <a asp-action="Edit" asp-route-id="@o.OfferingId" class="btn btn-sm btn-outline-primary">Edit</a>
+                    <a asp-controller="Session" asp-action="ForOffering" asp-route-offeringId="@o.OfferingId" class="btn btn-sm btn-outline-secondary">Sessions</a>
+                    <form asp-action="ToggleActive" asp-route-id="@o.OfferingId" method="post" class="d-inline">
+                        <input type="hidden" name="isActive" value="@(!o.IsActive ? "true" : "false")" />
+                        <button type="submit" class="btn btn-sm btn-outline-secondary">
+                            @(o.IsActive ? "Deactivate" : "Activate")
+                        </button>
+                    </form>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

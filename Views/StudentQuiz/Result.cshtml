@@ -1,0 +1,47 @@
+﻿@model Tutor_Manager.ViewModels.QuizzViewmodels.QuizAttemptResultViewModel
+
+@{
+    ViewData["Title"] = "Quiz Result";
+}
+
+<div class="container mt-4">
+    <h2>@Model.QuizTitle — Result</h2>
+
+    @if (Model.IsAutoSubmitted)
+    {
+        <div class="alert alert-warning">This attempt was automatically submitted when time ran out.</div>
+    }
+
+    <h4 class="mb-3">Score: @Model.TotalMarksAwarded / @Model.TotalPossibleMarks</h4>
+
+    <div class="list-group">
+        @foreach (var a in Model.Answers)
+        {
+            <div class="list-group-item">
+                <div class="d-flex justify-content-between">
+                    <div class="question-text">@a.QuestionText</div>
+                    <span class="badge bg-@(a.MarksAwarded == a.Marks ? "success" : "warning")">@a.MarksAwarded / @a.Marks</span>
+                </div>
+                @if (!string.IsNullOrWhiteSpace(a.AiFeedback))
+                {
+                    <div class="text-muted small mt-1">@a.AiFeedback</div>
+                }
+            </div>
+        }
+    </div>
+
+    <a asp-controller="StudentQuiz" asp-action="Index" class="btn btn-secondary mt-3">Back to Quizzes</a>
+</div>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            renderMathInElement(document.body, {
+                delimiters: [{ left: "$$", right: "$$", display: true }, { left: "$", right: "$", display: false }]
+            });
+        });
+    </script>
+}

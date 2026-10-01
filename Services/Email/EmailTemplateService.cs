@@ -1,93 +1,4 @@
-﻿//// EmailTemplateService.cs
-//using Tutor_Manager.Models;
-
-//namespace Tutor_Manager.Services.Email
-//{
-//    public class EmailTemplateService : IEmailTemplateService
-//    {
-//        public EmailMessage Build(EmailType type, string toEmail, Dictionary<string, string> data)
-//        {
-//            return type switch
-//            {
-//                EmailType.RegistrationConfirmation => new EmailMessage
-//                {
-//                    ToEmail = toEmail,
-//                    Subject = "Welcome to The Science Community",
-//                    Body = $"Hi {data["FirstName"]}, your TSC number is {data["TscNumber"]}."
-//                },
-
-//                EmailType.GuardianLinked => new EmailMessage
-//                {
-//                    ToEmail = toEmail,
-//                    Subject = "You've been linked to a learner",
-//                    Body = $"Hi {data["GuardianName"]}, you are now linked to {data["LearnerName"]} (TSC: {data["TscNumber"]})."
-//                },
-
-//                EmailType.SessionBooked => new EmailMessage
-//                {
-//                    ToEmail = toEmail,
-//                    Subject = "Session Confirmed",
-//                    Body = $"Your session for {data["Subject"]} on {data["Date"]} at {data["Location"]} is confirmed."
-//                },
-
-//                EmailType.PaymentReceived => new EmailMessage
-//                {
-//                    ToEmail = toEmail,
-//                    Subject = "Payment Received",
-//                    Body = $"We've received your payment of R{data["Amount"]}. Thank you!"
-//                },
-
-//                // EmailTemplateService.cs — add this case:
-//                EmailType.GuardianUnlinked => new EmailMessage
-//                {
-//                    ToEmail = toEmail,
-//                    Subject = "Almost there — link your account",
-//                    Body = $"Hi {data["FirstName"]}, we couldn't find a learner with TSC number {data["TscNumber"]}. You can try linking again from your dashboard."
-//                },
-
-//                // EmailTemplateService.cs — add these cases inside the switch:
-
-//                EmailType.TutorApplicationRejected => new EmailMessage
-//                {
-//                    ToEmail = toEmail,
-//                    Subject = "Your TSC Tutor Application",
-//                    Body = $"Hi {data["FirstName"]}, thank you for applying to The Science Community (Ref: {data["ReferenceNumber"]}). " +
-//                           $"After careful review, we won't be proceeding with your application at this time. " +
-//                           $"We appreciate the time you took to apply and wish you the best going forward."
-//                },
-
-//                EmailType.TutorApplicationChangesRequired => new EmailMessage
-//                {
-//                    ToEmail = toEmail,
-//                    Subject = "Action needed on your TSC Tutor Application",
-//                    Body = $"Hi {data["FirstName"]}, we're reviewing your application (Ref: {data["ReferenceNumber"]}) and need a bit more information: " +
-//                           $"{data["Notes"]}. Please log back in to update your application."
-//                },
-
-//                EmailType.TutorApplicationApproved => new EmailMessage
-//                {
-//                    ToEmail = toEmail,
-//                    Subject = "You've been approved as a TSC Tutor!",
-//                    Body = $"Hi {data["FirstName"]}, congratulations — your application (Ref: {data["ReferenceNumber"]}) has been approved! " +
-//                           $"Your Tutor Number is {data["TutorNumber"]}. To activate your account and set your password, click here: {data["ActivationLink"]}"
-//                },
-
-//                // EmailTemplateService.cs — add this case:
-//                EmailType.AdminAccountCreated => new EmailMessage
-//                {
-//                    ToEmail = toEmail,
-//                    Subject = "Your TSC Admin Account",
-//                    Body = $"Hi {data["FirstName"]}, an admin account has been created for you at The Science Community. " +
-//                           $"To activate your account and set your password, click here: {data["ActivationLink"]}"
-//                },
-
-//                _ => throw new NotImplementedException($"No template defined for {type}")
-//            };
-//        }
-//    }
-//}
-
-// EmailTemplateService.cs
+﻿
 using Tutor_Manager.Models;
 
 namespace Tutor_Manager.Services.Email
@@ -219,7 +130,30 @@ namespace Tutor_Manager.Services.Email
                            $"Please note this link is valid for 48 hours. If it expires before you activate your account, please ask an existing admin to assist you.\n\n" +
                            $"Warm regards,\nThe Science Community Team"
                 },
+                EmailType.OfferingAssigned => new EmailMessage
+                {
+                    ToEmail = toEmail,
+                    Subject = "You've been assigned a new tutoring offering",
+                    Body = $"Hi {data["FirstName"]},\n\n" +
+                           $"You've been assigned to teach a new tutoring offering:\n\n" +
+                           $"Subject: {data["Subject"]} (Grade {data["Grade"]})\n" +
+                           $"Type: {data["Type"]}\n" +
+                           $"Teaching Days: {data["TeachingDays"]}\n" +
+                           $"Delivery: {data["DeliveryMethod"]}\n\n" +
+                           $"Please log in to your dashboard to review the details.\n\n" +
+                           $"Warm regards,\nThe Science Community Team"
+                },
 
+                EmailType.OfferingDeactivated => new EmailMessage
+                {
+                    ToEmail = toEmail,
+                    Subject = "A tutoring offering has been discontinued",
+                    Body = $"Hi {data["FirstName"]},\n\n" +
+                           $"The following tutoring offering has been discontinued and is no longer active:\n\n" +
+                           $"Subject: {data["Subject"]} (Grade {data["Grade"]})\n\n" +
+                           $"If you believe this is a mistake, please contact TSC administration.\n\n" +
+                           $"Warm regards,\nThe Science Community Team"
+                },
                 _ => throw new NotImplementedException($"No template defined for {type}")
             };
         }

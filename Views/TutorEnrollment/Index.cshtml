@@ -1,0 +1,54 @@
+﻿@model List<(Tutor_Manager.Models.Offering Offering, int Taken, int Capacity)>
+
+@{
+    ViewData["Title"] = "My Classes";
+}
+
+<div class="container mt-4">
+    <h2>My Classes</h2>
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+    }
+
+    @if (!Model.Any())
+    {
+        <p class="text-muted">You don't have any active offerings yet.</p>
+    }
+    else
+    {
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Subject</th>
+                    <th>Grade</th>
+                    <th>Type</th>
+                    <th>Delivery Method</th>
+                    <th>Roster</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var row in Model)
+                {
+                    <tr>
+                        <td>@row.Offering.Subject.SubjectName</td>
+                        <td>Grade @row.Offering.Grade</td>
+                        <td>@row.Offering.Type</td>
+                        <td>@row.Offering.DeliveryMethod</td>
+                        <td>
+                            <span class="badge @(row.Taken >= row.Capacity ? "bg-danger" : "bg-light text-dark border")">
+                                @row.Taken / @row.Capacity
+                            </span>
+                        </td>
+                        <td>
+                            <a asp-controller="TutorEnrollment" asp-action="Roster" asp-route-offeringId="@row.Offering.OfferingId"
+                               class="btn btn-sm btn-outline-primary">View Roster</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</div>

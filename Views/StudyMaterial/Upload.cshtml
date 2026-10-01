@@ -1,0 +1,133 @@
+﻿@model Tutor_Manager.ViewModels.StudyMaterialUploadViewModel
+@using Tutor_Manager.ViewModels
+
+
+@{
+    ViewData["Title"] = "Upload Study Material";
+}
+
+<div class="container mt-4">
+    <h2>Upload Study Material</h2>
+
+    <div class="alert alert-info">
+        <strong>Before you upload:</strong>
+        <ul class="mb-0">
+            <li>Allowed file types: <strong>PDF, Word (.doc/.docx), PowerPoint (.ppt/.pptx)</strong></li>
+            <li>Maximum <strong>10 files</strong> per upload</li>
+            <li>Maximum <strong>20MB</strong> per file</li>
+            <li>Title and Topic/Chapter are required for every upload</li>
+        </ul>
+    </div>
+
+    <form asp-controller="StudyMaterial" asp-action="Upload" method="post" enctype="multipart/form-data" id="studyMaterialForm">
+
+        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+        <div class="mb-3">
+            <label asp-for="SubjectId" class="form-label">Pick Subject</label>
+            <select asp-for="SubjectId" asp-items="Model.AvailableSubjects" class="form-select">
+                <option value="">-- Select a subject --</option>
+            </select>
+            <span asp-validation-for="SubjectId" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="Title" class="form-label">Title</label>
+            <input asp-for="Title" class="form-control" placeholder="e.g. Chapter 3 Slides" maxlength="150" />
+            <div class="form-text">Max 150 characters.</div>
+            <span asp-validation-for="Title" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="TopicChapterLabel" class="form-label">Topics</label>
+            <input asp-for="TopicChapterLabel" class="form-control" placeholder="e.g. Chapter 3 - Chemical Bonding" maxlength="200" />
+            <div class="form-text">Max 200 characters. This lets you generate a quiz scoped to just this topic later.</div>
+            <span asp-validation-for="TopicChapterLabel" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="Description" class="form-label"></label>
+            <textarea asp-for="Description" class="form-control" rows="3" placeholder="Optional notes about this material" maxlength="1000"></textarea>
+            <div class="form-text">Optional. Max 1000 characters.</div>
+            <span asp-validation-for="Description" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="Files" class="form-label">Files</label>
+            <input type="file"
+                   id="filesInput"
+                   name="Files"
+                   class="form-control"
+                   multiple
+                   accept=".pdf,.doc,.docx,.ppt,.pptx" />
+            <div class="form-text">PDF, Word, or PowerPoint only — up to 10 files, 20MB each.</div>
+            <div id="fileValidationError" class="text-danger mt-1"></div>
+            <span asp-validation-for="Files" class="text-danger"></span>
+        </div>
+
+        <div id="selectedFilesList" class="mb-3"></div>
+
+        <button type="submit" class="btn btn-primary" id="submitBtn">Upload Material</button>
+        <a asp-controller="StudyMaterial" asp-action="Index" class="btn btn-secondary">Cancel</a>
+    </form>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+
+    <script>
+        document.getElementById('filesInput').addEventListener('change', function (e) {
+            const files = Array.from(e.target.files);
+            const allowedExtensions = ['.pdf', '.doc', '.docx', '.ppt', '.pptx'];
+            const maxSizeBytes = 20 * 1024 * 1024;
+            const maxCount = 10;
+            const errorSpan = document.getElementById('fileValidationError');
+            const listDiv = document.getElementById('selectedFilesList');
+            const submitBtn = document.getElementById('submitBtn');
+
+            errorSpan.textContent = '';
+            listDiv.innerHTML = '';
+            submitBtn.disabled = false;
+
+            if (files.length === 0) {
+                return;
+            }
+
+            if (files.length > maxCount) {
+                errorSpan.textContent = `You can upload a maximum of ${maxCount} files.`;
+                e.target.value = '';
+                submitBtn.disabled = true;
+                return;
+            }
+
+            for (const file of files) {
+                const extension = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
+
+                if (!allowedExtensions.includes(extension)) {
+                    errorSpan.textContent = `"${file.name}" is not an allowed type. Only PDF, Word, and PowerPoint files are supported.`;
+                    e.target.value = '';
+                    submitBtn.disabled = true;
+                    return;
+                }
+
+                if (file.size > maxSizeBytes) {
+                    errorSpan.textContent = `"${file.name}" exceeds the 20MB size limit.`;
+                    e.target.value = '';
+                    submitBtn.disabled = true;
+                    return;
+                }
+            }
+
+            const ul = document.createElement('ul');
+            ul.className = 'list-group';
+            files.forEach(file => {
+                const li = document.createElement('li');
+                li.className = 'list-group-item d-flex justify-content-between align-items-center';
+                const sizeMb = (file.size / (1024 * 1024)).toFixed(2);
+                li.innerHTML = `<span>${file.name}</span><span class="text-muted">${sizeMb} MB</span>`;
+                ul.appendChild(li);
+            });
+            listDiv.appendChild(ul);
+        });
+    </script>
+}

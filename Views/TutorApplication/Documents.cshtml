@@ -33,16 +33,17 @@
                 <div class="form-text">e.g. ID document, proof of address, additional certifications.</div>
             }
             var alreadyUploaded = Model.AlreadyUploadedFileNames.ContainsKey(slot.Key);
-            var badgeClass = slot.Requirement == "Required" ? "text-bg-danger"
-                            : slot.Requirement == "Recommended" ? "text-bg-warning"
-                            : "text-bg-secondary";
+
+            // Required = red, Recommended = grey, Optional = plain (no extra styling)
+            var requirementClass = slot.Requirement == "Required" ? "text-danger"
+                                 : slot.Requirement == "Recommended" ? "text-muted"
+                                 : "";
 
             <div class="card mb-3">
                 <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <label class="form-label mb-0 fw-bold">@slot.Label</label>
-                        <span class="badge @badgeClass">@slot.Requirement</span>
-                    </div>
+                    <label class="form-label mb-2 fw-bold">
+                        @slot.Label <span class="fw-normal @requirementClass">(@slot.Requirement)</span>
+                    </label>
 
                     @if (alreadyUploaded)
                     {

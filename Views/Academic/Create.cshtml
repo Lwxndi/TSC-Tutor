@@ -1,0 +1,40 @@
+﻿@model Tutor_Manager.ViewModels.SubjectEditViewModel
+@{
+    ViewData["Title"] = Model.SubjectId == 0 ? "Add Subject" : "Edit Subject";
+}
+
+<h2>@ViewData["Title"]</h2>
+
+<form asp-action="@(Model.SubjectId == 0 ? "Create" : "Edit")" asp-route-id="@Model.SubjectId" method="post">
+    <input type="hidden" asp-for="SubjectId" />
+
+    <div class="mb-3">
+        <label asp-for="SubjectName" class="form-label"></label>
+        <input asp-for="SubjectName" class="form-control" />
+        <span asp-validation-for="SubjectName" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3 form-check">
+        <input asp-for="IsActive" class="form-check-input" />
+        <label asp-for="IsActive" class="form-check-label"></label>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Grades Offered</label>
+        <div class="form-check">
+            <input asp-for="Grade10" class="form-check-input" />
+            <label asp-for="Grade10" class="form-check-label">Grade 10</label>
+        </div>
+        <div class="form-check">
+            <input asp-for="Grade11" class="form-check-input" />
+            <label asp-for="Grade11" class="form-check-label">Grade 11</label>
+        </div>
+        <div class="form-check">
+            <input asp-for="Grade12" class="form-check-input" />
+            <label asp-for="Grade12" class="form-check-label">Grade 12</label>
+        </div>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Save</button>
+    <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+</form>

@@ -1,0 +1,61 @@
+﻿@model Tutor_Manager.ViewModels.Sessions.GenerationPreviewViewModel
+@{
+    ViewData["Title"] = "Generation Preview";
+}
+
+<h2>Generated Session Preview</h2>
+<p>
+    <strong>@Model.ValidCandidates.Count</strong> sessions can be created —
+    <strong>@Model.InvalidCandidates.Count</strong> have issues
+</p>
+
+<h5 class="text-success">Ready to Create</h5>
+@if (!Model.ValidCandidates.Any())
+{
+    <p class="text-muted">None.</p>
+}
+else
+{
+    <ul class="list-group mb-4">
+        @foreach (var c in Model.ValidCandidates)
+        {
+            <li class="list-group-item">
+                ✓ @c.Date.ToString("dd MMM") — @c.TutorName — @c.StartTime.ToString(@"hh\:mm")–@c.EndTime.ToString(@"hh\:mm")
+            </li>
+        }
+    </ul>
+}
+
+<h5 class="text-warning">Issues</h5>
+@if (!Model.InvalidCandidates.Any())
+{
+    <p class="text-muted">None.</p>
+}
+else
+{
+    <ul class="list-group mb-4">
+        @foreach (var c in Model.InvalidCandidates)
+        {
+            <li class="list-group-item">
+                ⚠ @c.Date.ToString("dd MMM") — @c.TutorName — @c.Error
+            </li>
+        }
+    </ul>
+}
+
+<form asp-action="ConfirmGeneration" method="post">
+    @for (var i = 0; i < Model.ValidCandidates.Count; i++)
+    {
+        <input type="hidden" name="candidates[@i].OfferingId" value="@Model.ValidCandidates[i].OfferingId" />
+        <input type="hidden" name="candidates[@i].SubjectName" value="@Model.ValidCandidates[i].SubjectName" />
+        <input type="hidden" name="candidates[@i].Grade" value="@Model.ValidCandidates[i].Grade" />
+        <input type="hidden" name="candidates[@i].TutorName" value="@Model.ValidCandidates[i].TutorName" />
+        <input type="hidden" name="candidates[@i].Date" value="@Model.ValidCandidates[i].Date.ToString("yyyy-MM-dd")" />
+        <input type="hidden" name="candidates[@i].StartTime" value="@Model.ValidCandidates[i].StartTime" />
+        <input type="hidden" name="candidates[@i].EndTime" value="@Model.ValidCandidates[i].EndTime" />
+        <input type="hidden" name="candidates[@i].IsValid" value="true" />
+    }
+
+    <button type="submit" class="btn btn-primary" @(Model.ValidCandidates.Any() ? "" : "disabled")>Create Valid Sessions</button>
+    <a asp-action="Generate" class="btn btn-secondary">Back</a>
+</form>

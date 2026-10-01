@@ -1,0 +1,135 @@
+﻿@model Tutor_Manager.ViewModels.Sessions.MarkAttendanceViewModel
+@using Tutor_Manager.Models.Enums
+@{
+    ViewData["Title"] = "Attendance";
+    var postController = Model.IsAdminEdit ? "AdminAttendance" : "TutorSession";
+    var postAction = Model.IsAdminEdit ? "Edit" : "Attendance";
+    var backController = Model.IsAdminEdit ? "Session" : "TutorSession";
+    var anyEditable = Model.Rows.Any(r => !r.Locked);
+}
+
+<h2>Attendance</h2>
+<p class="text-muted">
+    @Model.SubjectName — Grade @Model.GradeNumber &middot;
+    @Model.Date.ToString("dddd, d MMMM yyyy"), @Model.StartTime.ToString(@"hh\:mm")–@Model.EndTime.ToString(@"hh\:mm")
+    @if (Model.IsHybrid) { <span class="badge bg-light text-dark border ms-1">Hybrid</span> }
+    @if (Model.IsAdminEdit) { <span class="badge bg-warning text-dark ms-1">Admin edit</span> }
+</p>
+
+@if (TempData["Error"] != null) { <div class="alert alert-danger">@TempData["Error"]</div> }
+
+@if (!Model.Rows.Any())
+{
+    <div class="alert alert-info">No active learners are enrolled in this offering.</div>
+    <a asp-controller="@backController" asp-action="Index" class="btn btn-secondary">Back</a>
+}
+else
+{
+    @if (Model.Status == SessionStatus.Completed && !Model.IsAdminEdit)
+    {
+        <div class="alert alert-secondary">
+            This session is completed. You can mark learners who are still pending; learners already marked are locked (ask an admin to change them).
+        </div>
+    }
+
+    <form asp-controller="@postController" asp-action="@postAction" method="post">
+        <input type="hidden" asp-for="SessionId" />
+
+        @if (anyEditable)
+        {
+            <button type="button" class="btn btn-sm btn-outline-success mb-2" id="markAllPresent">Mark all present</button>
+        }
+
+        <div class="table-responsive">
+            <table class="table align-middle">
+                <thead>
+                    <tr>
+                        <th>Learner</th>
+                        <th style="width:170px">Status</th>
+                        <th style="width:130px">Minutes late</th>
+                        @if (Model.IsHybrid) { <th style="width:150px">Attended</th> }
+                        <th>Note</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @for (var i = 0; i < Model.Rows.Count; i++)
+                    {
+                        var row = Model.Rows[i];
+                        <tr data-row>
+                            <td>
+                                @row.LearnerName
+                                @if (!row.IsMarked) { <span class="badge bg-warning text-dark ms-1">Pending</span> }
+                                <input type="hidden" name="Rows[@i].LearnerUserId" value="@row.LearnerUserId" />
+                            </td>
+
+                            @if (row.Locked)
+                            {
+                                <td>@row.Status</td>
+                                <td>@(row.MinutesLate.HasValue ? row.MinutesLate + " min" : "—")</td>
+                                @if (Model.IsHybrid) { <td>@(row.AttendedVia?.ToString() ?? "—")</td> }
+                                <td class="text-muted">@row.Note</td>
+                            }
+                            else
+                            {
+                                <td>
+                                    <select name="Rows[@i].Status" class="form-select form-select-sm status-select"
+                                            asp-items="Html.GetEnumSelectList<AttendanceStatus>().Select(x => new Microsoft.AspNetCore.Mvc.Rendering.SelectListItem { Text = x.Text, Value = x.Value, Selected = x.Value == ((int)row.Status).ToString() })">
+                                    </select>
+                                </td>
+                                <td>
+                                    <input type="number" name="Rows[@i].MinutesLate" value="@row.MinutesLate"
+                                           class="form-control form-control-sm late-input" min="0" max="@Model.DurationMinutes" />
+                                </td>
+                                @if (Model.IsHybrid)
+                                {
+                                    <td>
+                                        <select name="Rows[@i].AttendedVia" class="form-select form-select-sm via-select">
+                                            <option value="0" selected="@(row.AttendedVia != AttendedVia.Online)">In person</option>
+                                            <option value="1" selected="@(row.AttendedVia == AttendedVia.Online)">Online</option>
+                                        </select>
+                                    </td>
+                                }
+                                <td>
+                                    <input type="text" name="Rows[@i].Note" value="@row.Note" maxlength="500"
+                                           class="form-control form-control-sm" placeholder="Optional" />
+                                </td>
+                            }
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <div class="d-flex gap-2">
+            @if (anyEditable) { <button type="submit" class="btn btn-success">Save attendance</button> }
+            <a asp-controller="@backController" asp-action="Index" class="btn btn-secondary">Back</a>
+        </div>
+    </form>
+}
+
+@section Scripts {
+    <script>
+        function syncRow(tr) {
+            var status = tr.querySelector('.status-select');
+            if (!status) return;
+            var present = status.value === '0';
+            var late = tr.querySelector('.late-input');
+            var via = tr.querySelector('.via-select');
+            if (late) { late.disabled = !present; if (!present) late.value = ''; }
+            if (via) { via.disabled = !present; }
+        }
+
+        document.querySelectorAll('[data-row]').forEach(function (tr) {
+            var s = tr.querySelector('.status-select');
+            if (s) { s.addEventListener('change', function () { syncRow(tr); }); syncRow(tr); }
+        });
+
+        var btn = document.getElementById('markAllPresent');
+        if (btn) btn.addEventListener('click', function () {
+            document.querySelectorAll('.status-select').forEach(function (s) {
+                s.value = '0';
+                syncRow(s.closest('tr'));
+            });
+        });
+    </script>
+}

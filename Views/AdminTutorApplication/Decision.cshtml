@@ -16,7 +16,7 @@
             <label class="form-label">Decision</label>
             <div class="form-check">
                 <input type="radio" class="form-check-input" asp-for="Decision" value="Approve" id="decApprove" />
-                <label class="form-check-label text-success" for="decApprove">Approve</label>
+                <label class="form-check-label text-primary" for="decApprove">Approve</label>
             </div>
             <div class="form-check">
                 <input type="radio" class="form-check-input" asp-for="Decision" value="Reject" id="decReject" />
@@ -24,7 +24,7 @@
             </div>
             <div class="form-check">
                 <input type="radio" class="form-check-input" asp-for="Decision" value="RequestChanges" id="decChanges" />
-                <label class="form-check-label text-info" for="decChanges">Request Changes</label>
+                <label class="form-check-label text-muted" for="decChanges">Request Changes</label>
             </div>
             <span asp-validation-for="Decision" class="text-danger small"></span>
         </div>

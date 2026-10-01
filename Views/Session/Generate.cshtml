@@ -1,0 +1,74 @@
+﻿@model Tutor_Manager.ViewModels.Sessions.GenerateSessionsFilterViewModel
+@using Tutor_Manager.Models
+@{
+    ViewData["Title"] = "Generate Sessions";
+}
+
+<h2>Generate Sessions</h2>
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">@TempData["Error"]</div>
+}
+
+<form asp-action="Generate" method="post" class="row g-3 mb-4">
+    <div class="col-md-3">
+        <label class="form-label">Subject</label>
+        <select name="SubjectId" class="form-select">
+            <option value="">-- Select --</option>
+            @foreach (var s in Model.AvailableSubjects)
+            {
+                <option value="@s.SubjectId" selected="@(Model.SubjectId == s.SubjectId)">@s.SubjectName</option>
+            }
+        </select>
+    </div>
+    <div class="col-md-2">
+        <label class="form-label">Grade</label>
+        <select name="Grade" class="form-select">
+            <option value="">-- Select --</option>
+            <option value="@Grade.Grade10" selected="@(Model.Grade == Grade.Grade10)">Grade 10</option>
+            <option value="@Grade.Grade11" selected="@(Model.Grade == Grade.Grade11)">Grade 11</option>
+            <option value="@Grade.Grade12" selected="@(Model.Grade == Grade.Grade12)">Grade 12</option>
+        </select>
+    </div>
+    <div class="col-md-3">
+        <label class="form-label">Start Date</label>
+        <input name="StartDate" type="date" class="form-control" value="@Model.StartDate.ToString("yyyy-MM-dd")" />
+    </div>
+    <div class="col-md-3">
+        <label class="form-label">End Date</label>
+        <input name="EndDate" type="date" class="form-control" value="@Model.EndDate.ToString("yyyy-MM-dd")" />
+    </div>
+    <div class="col-md-1 d-flex align-items-end">
+        <button type="submit" class="btn btn-outline-secondary w-100">Find</button>
+    </div>
+</form>
+
+@if (Model.MatchingOfferings.Any())
+{
+    <form asp-action="PreviewGeneration" method="post">
+        <input type="hidden" name="SubjectId" value="@Model.SubjectId" />
+        <input type="hidden" name="Grade" value="@Model.Grade" />
+        <input type="hidden" name="StartDate" value="@Model.StartDate.ToString("yyyy-MM-dd")" />
+        <input type="hidden" name="EndDate" value="@Model.EndDate.ToString("yyyy-MM-dd")" />
+
+        <h5>Available Offerings</h5>
+        @foreach (var o in Model.MatchingOfferings)
+        {
+            <div class="form-check mb-2">
+                <input type="checkbox" class="form-check-input" name="SelectedOfferingIds" value="@o.OfferingId" checked="checked" />
+                <label class="form-check-label">
+                    <strong>@o.TutorName</strong> — @string.Join(", ", o.TeachingDays) — @o.DeliveryMethod
+                </label>
+            </div>
+        }
+
+        <button type="submit" class="btn btn-primary mt-3">Preview Generation</button>
+    </form>
+}
+else if (Model.SubjectId.HasValue && Model.Grade.HasValue)
+{
+    <p class="text-muted">No active offerings match this subject/grade.</p>
+}
+
+<a asp-action="Index" class="btn btn-secondary mt-3">Cancel</a>

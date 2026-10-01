@@ -1,0 +1,126 @@
+﻿@model Tutor_Manager.ViewModels.QuizzViewmodels.QuizAttemptTakeViewModel
+@using Tutor_Manager.Models
+
+@{
+    ViewData["Title"] = Model.QuizTitle;
+    var deadline = DateTime.SpecifyKind(Model.StartedAt, DateTimeKind.Utc).AddMinutes(Model.DurationMinutes);
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>@Model.QuizTitle</h2>
+        <div id="countdown" class="fs-4 fw-bold text-danger"></div>
+    </div>
+
+    <form asp-controller="StudentQuiz" asp-action="Submit" method="post" id="attemptForm">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="AttemptId" value="@Model.AttemptId" />
+        <input type="hidden" name="IsAutoSubmit" id="isAutoSubmit" value="false" />
+
+        @for (int i = 0; i < Model.Questions.Count; i++)
+        {
+            var q = Model.Questions[i];
+            <div class="card mb-3">
+                <div class="card-body">
+                    <input type="hidden" name="Answers[@i].QuestionId" value="@q.QuestionId" />
+                    <div class="d-flex justify-content-between">
+                        <h5 class="question-text">Q@(i + 1). @q.QuestionText</h5>
+                        <span class="badge bg-light text-dark border">@q.Marks mark(s)</span>
+                    </div>
+
+                    @if (q.HasImage)
+                    {
+                        <img src="@Url.Action("Image", "QuizImage", new { questionId = q.QuestionId })"
+                             class="img-fluid rounded border my-2" style="max-height:360px" alt="Question image" />
+                    }
+
+                    @if (q.QuestionType == QuizQuestionType.MultipleChoiceSingle)
+                    {
+                        foreach (var opt in q.Options)
+                        {
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="Answers[@i].SelectedOptionIds" value="@opt.OptionId" onclick="enforceSingle(this)" />
+                                <label class="form-check-label question-text">@opt.OptionText</label>
+                            </div>
+                        }
+                    }
+                    else if (q.QuestionType == QuizQuestionType.MultipleChoiceMultiple)
+                    {
+                        foreach (var opt in q.Options)
+                        {
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="Answers[@i].SelectedOptionIds" value="@opt.OptionId" />
+                                <label class="form-check-label question-text">@opt.OptionText</label>
+                            </div>
+                        }
+                    }
+                    else if (q.QuestionType == QuizQuestionType.TrueFalse)
+                    {
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="Answers[@i].BoolAnswer" value="true" />
+                            <label class="form-check-label">True</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="Answers[@i].BoolAnswer" value="false" />
+                            <label class="form-check-label">False</label>
+                        </div>
+                    }
+                    else
+                    {
+                        <textarea name="Answers[@i].TextAnswer" class="form-control" rows="4" placeholder="Your answer"></textarea>
+                        <div class="form-text">You can use LaTeX for equations — <code>$x^2$</code> for inline, <code>$$...$$</code> for block.</div>
+                    }
+                </div>
+            </div>
+        }
+
+        <button type="submit" class="btn btn-success" id="submitBtn">Submit Quiz</button>
+    </form>
+</div>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            renderMathInElement(document.body, {
+                delimiters: [
+                    { left: "$$", right: "$$", display: true },
+                    { left: "$", right: "$", display: false }
+                ]
+            });
+        });
+
+        function enforceSingle(checkbox) {
+            const group = checkbox.closest('.card').querySelectorAll('input[type=checkbox]');
+            group.forEach(cb => { if (cb !== checkbox) cb.checked = false; });
+        }
+
+        // Countdown is computed from the server-provided deadline, not re-timed client-side,
+        // so a paused tab or slow JS doesn't drift the actual cutoff.
+        const deadline = new Date("@deadline.ToString("o")").getTime();
+        const countdownEl = document.getElementById('countdown');
+        const form = document.getElementById('attemptForm');
+        let autoSubmitted = false;
+
+        function tick() {
+            const remaining = deadline - Date.now();
+            if (remaining <= 0) {
+                countdownEl.textContent = "Time's up";
+                if (!autoSubmitted) {
+                    autoSubmitted = true;
+                    document.getElementById('isAutoSubmit').value = 'true';
+                    form.submit();
+                }
+                return;
+            }
+            const mins = Math.floor(remaining / 60000);
+            const secs = Math.floor((remaining % 60000) / 1000);
+            countdownEl.textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
+            setTimeout(tick, 1000);
+        }
+        tick();
+    </script>
+}

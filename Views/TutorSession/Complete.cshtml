@@ -1,0 +1,81 @@
+﻿@* @model Tutor_Manager.ViewModels.Sessions.CompleteSessionViewModel;
+@{
+    ViewData["Title"] = "Complete Session";
+}
+
+<h2>Complete Session</h2>
+
+<form asp-action="Complete" method="post">
+    <input type="hidden" asp-for="SessionId" />
+    <div class="mb-3">
+        <label asp-for="Notes" class="form-label">Session Notes</label>
+        <textarea asp-for="Notes" class="form-control" rows="4" placeholder="What was covered, how it went..."></textarea>
+    </div>
+    <button type="submit" class="btn btn-success">Mark Completed</button>
+    <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+</form> *@
+
+@model Tutor_Manager.ViewModels.Sessions.CompleteSessionViewModel
+@using Tutor_Manager.Models.Enums
+@{
+    ViewData["Title"] = "Complete Session";
+    var session = ViewBag.SessionSummary as Tutor_Manager.ViewModels.Sessions.SessionListItemViewModel;
+}
+
+<h2>Complete Session</h2>
+
+@if (session != null)
+{
+    <p class="text-muted">
+        @session.SubjectName — Grade @((int)session.Grade) —
+        @session.Date.ToString("dddd, d MMMM yyyy"), @session.StartTime.ToString(@"hh\:mm")–@session.EndTime.ToString(@"hh\:mm")
+    </p>
+}
+@if ((ViewBag.UnmarkedCount ?? 0) > 0)
+{
+    <div class="alert alert-warning">
+        Attendance hasn't been marked for @ViewBag.UnmarkedCount learner(s).
+        You can still complete the session and mark it later, or
+        <a asp-action="Attendance" asp-route-sessionId="@Model.SessionId">mark it now</a>.
+    </div>
+}
+
+@if (!ViewData.ModelState.IsValid)
+{
+    <div class="alert alert-danger" asp-validation-summary="ModelOnly"></div>
+}
+
+<form asp-action="Complete" method="post">
+    <input type="hidden" asp-for="SessionId" />
+
+    <div class="mb-3">
+        <label asp-for="TopicsCovered" class="form-label">Topics covered</label>
+        <textarea asp-for="TopicsCovered" class="form-control" rows="3"
+                  placeholder="e.g. Quadratic equations, factorising, completing the square"></textarea>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Performance" class="form-label">Learner performance this session</label>
+        <select asp-for="Performance" class="form-select">
+            <option value="">-- Not assessed --</option>
+            @foreach (var value in Enum.GetValues<StudentPerformance>())
+            {
+                <option value="@value">@value</option>
+            }
+        </select>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="HomeworkAssigned" class="form-label">Homework assigned</label>
+        <textarea asp-for="HomeworkAssigned" class="form-control" rows="2"
+                  placeholder="Leave blank if none"></textarea>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="TutorComments" class="form-label">Additional comments</label>
+        <textarea asp-for="TutorComments" class="form-control" rows="3"></textarea>
+    </div>
+
+    <button type="submit" class="btn btn-success">Mark Session Completed</button>
+    <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+</form>

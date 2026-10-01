@@ -1,0 +1,30 @@
+﻿@model Tutor_Manager.ViewModels.RescheduleSessionViewModel
+@{
+    ViewData["Title"] = "Reschedule Session";
+}
+
+<h2>Reschedule Session</h2>
+
+<div asp-validation-summary="All" class="text-danger"></div>
+
+<form asp-action="Reschedule" method="post">
+    <input type="hidden" asp-for="SessionId" />
+
+    <div class="row g-3">
+        <div class="col-md-4">
+            <label class="form-label">New Date</label>
+            <input asp-for="NewDate" type="date" class="form-control" />
+        </div>
+        <div class="col-md-4">
+            <label class="form-label">New Start Time</label>
+            <input asp-for="NewStartTime" type="time" class="form-control" />
+        </div>
+        <div class="col-md-4">
+            <label class="form-label">New End Time</label>
+            <input asp-for="NewEndTime" type="time" class="form-control" />
+        </div>
+    </div>
+
+    <button type="submit" class="btn btn-primary mt-3">Reschedule</button>
+    <a asp-action="Details" asp-route-id="@Model.SessionId" class="btn btn-secondary mt-3">Cancel</a>
+</form>

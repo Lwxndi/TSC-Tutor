@@ -1,0 +1,185 @@
+﻿@* Views/Assessment/Create.cshtml *@
+@model Tutor_Manager.ViewModels.AssessmentViewmodels.AssessmentCreateViewModel
+
+@{
+    ViewData["Title"] = "Create Assessment";
+}
+
+<div class="container mt-4">
+    <h2>Create Assessment</h2>
+
+    <div class="alert alert-info">
+        Upload your question paper and marking guideline separately. PDF, Word, or PowerPoint — max 20MB each.
+    </div>
+
+    <form asp-controller="Assessment" asp-action="Create" method="post" enctype="multipart/form-data">
+        @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="TimezoneOffsetMinutes" id="TimezoneOffsetMinutes" />
+        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+        <div class="mb-3">
+            <label asp-for="SubjectId" class="form-label">Subject</label>
+            <select asp-for="SubjectId" asp-items="Model.AvailableSubjects" id="subjectSelect" class="form-select">
+                <option value="">-- Select a subject --</option>
+            </select>
+            <span asp-validation-for="SubjectId" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="Title" class="form-label">Title</label>
+            <input asp-for="Title" class="form-control" maxlength="150" />
+            <span asp-validation-for="Title" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="Description" class="form-label">Description</label>
+            <textarea asp-for="Description" class="form-control" rows="3" maxlength="1000"></textarea>
+            <span asp-validation-for="Description" class="text-danger"></span>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label asp-for="DueDate" class="form-label">Due Date</label>
+                <input asp-for="DueDate" type="date" class="form-control" />
+                <span asp-validation-for="DueDate" class="text-danger"></span>
+            </div>
+            <div class="col-md-6 mb-3">
+                <label asp-for="DeclaredTotalMarks" class="form-label">Total Marks</label>
+                <input asp-for="DeclaredTotalMarks" type="number" class="form-control" min="1" max="1000" />
+                <div class="form-text">Optional — shown alongside the computed total once questions exist.</div>
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="QuestionPaperFile" class="form-label">Question Paper</label>
+            <input type="file" name="QuestionPaperFile" class="form-control" accept=".pdf,.doc,.docx,.ppt,.pptx" required />
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="MarkingGuidelineFile" class="form-label">Marking Guideline</label>
+            <input type="file" name="MarkingGuidelineFile" class="form-control" accept=".pdf,.doc,.docx,.ppt,.pptx" required />
+        </div>
+
+        <hr class="my-4" />
+        <h5>Constraints</h5>
+
+        <div class="row">
+            <div class="col-md-3 mb-3">
+                <label asp-for="OpenDate" class="form-label">Open Date</label>
+                <input asp-for="OpenDate" type="date" class="form-control" />
+                <span asp-validation-for="OpenDate" class="text-danger"></span>
+            </div>
+            <div class="col-md-3 mb-3">
+                <label asp-for="OpenTime" class="form-label">Open Time</label>
+                <input asp-for="OpenTime" type="time" class="form-control" />
+                <span asp-validation-for="OpenTime" class="text-danger"></span>
+            </div>
+            <div class="col-md-3 mb-3">
+                <label asp-for="CloseDate" class="form-label">Close Date</label>
+                <input asp-for="CloseDate" type="date" class="form-control" />
+                <span asp-validation-for="CloseDate" class="text-danger"></span>
+            </div>
+            <div class="col-md-3 mb-3">
+                <label asp-for="CloseTime" class="form-label">Close Time</label>
+                <input asp-for="CloseTime" type="time" class="form-control" />
+                <span asp-validation-for="CloseTime" class="text-danger"></span>
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="MaxAttempts" class="form-label">Max Attempts</label>
+            <input asp-for="MaxAttempts" type="number" class="form-control" min="1" max="10" style="max-width: 150px;" />
+            <span asp-validation-for="MaxAttempts" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="AudienceType" class="form-label">Audience</label>
+            <select asp-for="AudienceType" id="audienceTypeSelect" class="form-select" style="max-width: 300px;"
+                    asp-items="Html.GetEnumSelectList<Tutor_Manager.Models.QuizzTypes>()"></select>
+            <span asp-validation-for="AudienceType" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3" id="offeringSection" style="display:none;">
+            <label asp-for="OfferingId" class="form-label">Offering</label>
+            <select asp-for="OfferingId" id="offeringSelect" class="form-select" style="max-width: 400px;">
+                <option value="">-- Select an offering --</option>
+            </select>
+            <span asp-validation-for="OfferingId" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3" id="learnersSection" style="display:none;">
+            <label class="form-label">Learners</label>
+            <div id="learnersList" class="border rounded p-2" style="max-height: 250px; overflow-y: auto;"></div>
+            <span asp-validation-for="SelectedLearnerUserIds" class="text-danger"></span>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Create Assessment</button>
+        <a asp-controller="Assessment" asp-action="Index" class="btn btn-secondary">Cancel</a>
+    </form>
+</div>
+
+@section Scripts {
+    <script>
+        document.getElementById('TimezoneOffsetMinutes').value = new Date().getTimezoneOffset();
+        const offeringsData = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(ViewBag.OfferingsWithSubject));
+        const learnersData = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(ViewBag.LearnersWithSubject));
+
+        function getSelectedSubjectId() {
+            const val = document.getElementById('subjectSelect').value;
+            return val ? parseInt(val) : null;
+        }
+
+        function refreshOfferings() {
+            const subjectId = getSelectedSubjectId();
+            const select = document.getElementById('offeringSelect');
+            select.innerHTML = '<option value="">-- Select an offering --</option>';
+            if (!subjectId) return;
+
+            offeringsData
+                .filter(o => o.subjectId === subjectId)
+                .forEach(o => {
+                    const opt = document.createElement('option');
+                    opt.value = o.offeringId;
+                    opt.textContent = `${o.subjectName} - Grade ${o.grade} (${o.type})`;
+                    select.appendChild(opt);
+                });
+        }
+
+        function refreshLearners() {
+            const subjectId = getSelectedSubjectId();
+            const container = document.getElementById('learnersList');
+            container.innerHTML = '';
+            if (!subjectId) return;
+
+            learnersData
+                .filter(l => l.subjectId === subjectId)
+                .forEach(l => {
+                    const div = document.createElement('div');
+                    div.className = 'form-check';
+                    div.innerHTML = `
+                        <input class="form-check-input" type="checkbox" name="SelectedLearnerUserIds"
+                               value="${l.learnerUserId}" id="learner_${l.learnerUserId}">
+                        <label class="form-check-label" for="learner_${l.learnerUserId}">${l.fullName}</label>`;
+                    container.appendChild(div);
+                });
+        }
+
+        function toggleAudienceSections() {
+            const type = document.getElementById('audienceTypeSelect').value;
+            document.getElementById('offeringSection').style.display = (type === 'SpecificOffering') ? 'block' : 'none';
+            document.getElementById('learnersSection').style.display = (type === 'SpecificLearners') ? 'block' : 'none';
+        }
+
+        document.getElementById('subjectSelect').addEventListener('change', function () {
+            refreshOfferings();
+            refreshLearners();
+        });
+
+        document.getElementById('audienceTypeSelect').addEventListener('change', toggleAudienceSections);
+
+        // Initial state
+        toggleAudienceSections();
+        refreshOfferings();
+        refreshLearners();
+    </script>
+}

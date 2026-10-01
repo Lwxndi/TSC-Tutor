@@ -1,0 +1,127 @@
+﻿@model Tutor_Manager.Models.Payment
+@using Tutor_Manager.Models.Enums
+@using Tutor_Manager.ViewModels
+
+@{
+    ViewData["Title"] = "Payment " + PaymentViewHelpers.ReceiptRef(Model);
+    var lines = Model.PaymentInvoices
+        .SelectMany(pi => pi.Invoice.LineItems.Select(li => new { pi.Invoice, Line = li }))
+        .Where(x => Model.Status != PaymentStatus.Paid || x.Line.Status == LineItemStatus.Paid)
+        .OrderBy(x => x.Line.Learner.User.FirstName).ThenBy(x => x.Line.DueDate)
+        .ToList();
+    var guardian = Model.Guardian.User;
+}
+
+<div class="container mt-4" style="max-width: 1000px;">
+    <a asp-action="Index" class="small"><i class="bi bi-arrow-left"></i> Back to payments</a>
+
+    <div class="d-flex justify-content-between align-items-start mt-2 mb-3">
+        <div>
+            <h2 class="mb-1">@PaymentViewHelpers.ReceiptRef(Model)</h2>
+            <div class="text-muted small">Payment ID @Model.PaymentId</div>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <partial name="_PaymentStatusBadge" model="Model.Status" />
+            @if (Model.Status == PaymentStatus.Paid)
+            {
+                <a asp-action="DownloadReceipt" asp-route-paymentId="@Model.PaymentId" class="btn btn-outline-primary btn-sm">
+                    <i class="bi bi-download"></i> Admin receipt
+                </a>
+            }
+        </div>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(Model.ReviewNote))
+    {
+        <div class="alert alert-danger">
+            <strong><i class="bi bi-exclamation-triangle me-1"></i> Needs review:</strong> @Model.ReviewNote
+        </div>
+    }
+
+    <div class="row g-3 mb-3">
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-header fw-semibold">Paid by</div>
+                <div class="card-body">
+                    <div class="fw-semibold">@guardian.FirstName @guardian.LastName</div>
+                    <div>@guardian.Email</div>
+                    @if (!string.IsNullOrWhiteSpace(guardian.PhoneNumber))
+                    {
+                        <div>@guardian.PhoneNumber</div>
+                    }
+                    <div class="text-muted small mt-1">Guardian user ID @Model.GuardianUserId</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-header fw-semibold">Payment</div>
+                <div class="card-body small">
+                    <div class="d-flex justify-content-between"><span class="text-muted">Amount</span><strong>R@(Model.Amount.ToString("N2"))</strong></div>
+                    <div class="d-flex justify-content-between"><span class="text-muted">Started</span><span>@PaymentViewHelpers.When(Model.CreatedAt)</span></div>
+                    <div class="d-flex justify-content-between"><span class="text-muted">Paid</span><span>@PaymentViewHelpers.When(Model.PaidAt)</span></div>
+                    <div class="mt-2 text-muted">Stripe session</div>
+                    <div class="font-monospace text-break">@(Model.StripeCheckoutSessionId ?? "—")</div>
+                    <div class="mt-2 text-muted">Stripe payment intent</div>
+                    <div class="font-monospace text-break">@(Model.StripePaymentIntentId ?? "—")</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-header fw-semibold">
+            Paid for @(Model.Status == PaymentStatus.Paid ? "" : "(not settled)")
+        </div>
+        <div class="table-responsive">
+            <table class="table mb-0 align-middle">
+                <thead>
+                    <tr><th>Learner</th><th>Description</th><th>Month</th><th>Invoice</th><th class="text-end">Amount</th></tr>
+                </thead>
+                <tbody>
+                    @foreach (var x in lines)
+                    {
+                        <tr>
+                            <td>@PaymentViewHelpers.LearnerName(x.Line)</td>
+                            <td>
+                                @PaymentViewHelpers.Describe(x.Line)
+                                @if (x.Line.IsCarriedForward)
+                                {
+                                    <span class="badge bg-info text-dark ms-1">Carried forward</span>
+                                }
+                            </td>
+                            <td>@PaymentViewHelpers.Month(x.Line)</td>
+                            <td>
+                                @PaymentViewHelpers.InvoiceRef(x.Invoice)
+                                <partial name="_InvoiceStatusBadge" model="x.Invoice.Status" />
+                            </td>
+                            <td class="text-end">R@(x.Line.AmountDue.ToString("N2"))</td>
+                        </tr>
+                    }
+                </tbody>
+                <tfoot>
+                    <tr class="fw-bold">
+                        <td colspan="4" class="text-end">Total</td>
+                        <td class="text-end">R@(Model.Amount.ToString("N2"))</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+
+    @if (Model.Status == PaymentStatus.Paid)
+    {
+        <div class="card">
+            <div class="card-header fw-semibold">Paid per learner</div>
+            <ul class="list-group list-group-flush">
+                @foreach (var g in lines.GroupBy(x => PaymentViewHelpers.LearnerName(x.Line)).OrderBy(g => g.Key))
+                {
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span>@g.Key</span>
+                        <span>R@(g.Sum(x => x.Line.AmountDue).ToString("N2"))</span>
+                    </li>
+                }
+            </ul>
+        </div>
+    }
+</div>

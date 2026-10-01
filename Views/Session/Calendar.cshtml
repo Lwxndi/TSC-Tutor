@@ -1,0 +1,181 @@
+﻿@model List<Tutor_Manager.ViewModels.Sessions.SessionListItemViewModel>
+@using Tutor_Manager.Models.Enums
+@{
+    ViewData["Title"] = "Calendar";
+    int year = ViewBag.Year;
+    int month = ViewBag.Month;
+    var firstOfMonth = new DateTime(year, month, 1);
+    var daysInMonth = DateTime.DaysInMonth(year, month);
+    var startOffset = (int)firstOfMonth.DayOfWeek;
+    var today = DateTime.Today;
+}
+
+<style>
+    .cal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.25rem;
+    }
+
+    .cal-grid {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 6px;
+        background: #e9ecef;
+        border-radius: 12px;
+        padding: 6px;
+    }
+
+    .cal-weekday {
+        text-align: center;
+        font-weight: 600;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: #6c757d;
+        padding: 0.5rem 0;
+    }
+
+    .cal-cell {
+        background: #fff;
+        border-radius: 10px;
+        min-height: 130px;
+        padding: 8px;
+        display: flex;
+        flex-direction: column;
+        transition: box-shadow 0.15s ease;
+    }
+
+        .cal-cell.empty {
+            background: transparent;
+        }
+
+        .cal-cell:not(.empty):hover {
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+        }
+
+        .cal-cell.today {
+            border: 2px solid #0F5C5C;
+        }
+
+    .cal-daynum {
+        font-weight: 600;
+        font-size: 0.9rem;
+        margin-bottom: 6px;
+        color: #2B2E33;
+    }
+
+    .cal-cell.today .cal-daynum {
+        color: #0F5C5C;
+    }
+
+    .cal-event {
+        display: block;
+        font-size: 0.72rem;
+        padding: 3px 6px;
+        border-radius: 6px;
+        margin-bottom: 3px;
+        text-decoration: none;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        font-weight: 500;
+        border-left: 3px solid transparent;
+    }
+
+        .cal-event.status-scheduled {
+            background: #e7f1ff;
+            color: #0d5ed7;
+            border-left-color: #0d6efd;
+        }
+
+        .cal-event.status-completed {
+            background: #e6f6ec;
+            color: #146c33;
+            border-left-color: #198754;
+        }
+
+        .cal-event.status-cancelled {
+            background: #f5f0f0;
+            color: #7a5b5b;
+            border-left-color: #b08d8d;
+            text-decoration: line-through;
+        }
+
+        .cal-event.status-rescheduled {
+            background: #f2e9fb;
+            color: #6a3fa0;
+            border-left-color: #8a4fd1;
+        }
+
+        .cal-event.status-inprogress,
+        .cal-event.status-noshow {
+            background: #fff3e0;
+            color: #a15c00;
+            border-left-color: #fd7e14;
+        }
+
+        .cal-event:hover {
+            filter: brightness(0.95);
+        }
+
+    .cal-more {
+        font-size: 0.7rem;
+        color: #6c757d;
+        margin-top: 2px;
+    }
+</style>
+
+<div class="cal-header">
+    <h2 class="mb-0">@firstOfMonth.ToString("MMMM yyyy")</h2>
+    <div>
+        <a asp-action="Calendar" asp-route-year="@firstOfMonth.AddMonths(-1).Year" asp-route-month="@firstOfMonth.AddMonths(-1).Month" class="btn btn-outline-secondary">‹ Prev</a>
+        <a asp-action="Calendar" asp-route-year="@firstOfMonth.AddMonths(1).Year" asp-route-month="@firstOfMonth.AddMonths(1).Month" class="btn btn-outline-secondary">Next ›</a>
+        <a asp-action="Index" class="btn btn-outline-primary">List View</a>
+    </div>
+</div>
+
+<div class="cal-grid">
+    @foreach (var d in new[] { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" })
+    {
+        <div class="cal-weekday">@d</div>
+    }
+
+    @for (var i = 0; i < startOffset; i++)
+    {
+        <div class="cal-cell empty"></div>
+    }
+
+    @for (var day = 1; day <= daysInMonth; day++)
+    {
+        var thisDate = new DateTime(year, month, day);
+        var daySessions = Model.Where(s => s.Date.Date == thisDate.Date).OrderBy(s => s.StartTime).ToList();
+        var isToday = thisDate.Date == today;
+
+        <div class="cal-cell @(isToday ? "today" : "")">
+            <div class="cal-daynum">@day</div>
+            @foreach (var s in daySessions.Take(3))
+            {
+                var statusClass = s.Status switch
+                {
+                    SessionStatus.Scheduled => "status-scheduled",
+                    SessionStatus.Completed => "status-completed",
+                    SessionStatus.Cancelled => "status-cancelled",
+                    SessionStatus.Rescheduled => "status-rescheduled",
+                    SessionStatus.InProgress => "status-inprogress",
+                    SessionStatus.NoShow => "status-noshow",
+                    _ => "status-scheduled"
+                };
+
+                <a asp-action="Details" asp-route-id="@s.SessionId" class="cal-event @statusClass" title="@s.SubjectName — @s.TutorName">
+                    @s.StartTime.ToString(@"hh\:mm") @s.SubjectName
+                </a>
+            }
+            @if (daySessions.Count > 3)
+            {
+                <div class="cal-more">+@(daySessions.Count - 3) more</div>
+            }
+        </div>
+    }
+</div>

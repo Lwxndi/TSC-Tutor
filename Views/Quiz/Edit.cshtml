@@ -1,0 +1,187 @@
+﻿@model Tutor_Manager.ViewModels.QuizzViewmodels.QuizEditViewModel
+@using Tutor_Manager.ViewModels.QuizzViewmodels
+
+@{
+    ViewData["Title"] = "Edit Quiz";
+    var materials = (IEnumerable<dynamic>)ViewBag.MaterialsWithSubject;
+    var offerings = (IEnumerable<dynamic>)ViewBag.OfferingsWithSubject;
+    var learners = (IEnumerable<dynamic>)ViewBag.LearnersWithSubject;
+}
+
+<div class="container mt-4">
+    <h2>Edit Quiz</h2>
+
+    <form asp-controller="Quiz" asp-action="Edit" method="post" id="quizEditForm">
+        @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="Id" />
+
+        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+        <div class="mb-3">
+            <label asp-for="StudyMaterialId" class="form-label">Study Material</label>
+            <select asp-for="StudyMaterialId" class="form-select" id="materialSelect">
+                <option value="">-- Select study material --</option>
+                @foreach (var m in materials)
+                {
+                    <option value="@m.Id" data-subject-id="@m.SubjectId" selected="@(m.Id == Model.StudyMaterialId ? "selected" : null)">@m.Title</option>
+                }
+            </select>
+            <span asp-validation-for="StudyMaterialId" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="Title" class="form-label">Quiz Title</label>
+            <input asp-for="Title" class="form-control" maxlength="150" />
+            <span asp-validation-for="Title" class="text-danger"></span>
+        </div>
+
+        <div class="row">
+            <div class="col-md-3 mb-3">
+                <label asp-for="OpenDate" class="form-label">Opens On</label>
+                <input asp-for="OpenDate" type="date" class="form-control" />
+                <span asp-validation-for="OpenDate" class="text-danger"></span>
+            </div>
+            <div class="col-md-3 mb-3">
+                <label asp-for="OpenTime" class="form-label">Opens At</label>
+                <input asp-for="OpenTime" type="time" class="form-control" />
+                <span asp-validation-for="OpenTime" class="text-danger"></span>
+            </div>
+            <div class="col-md-3 mb-3">
+                <label asp-for="CloseDate" class="form-label">Closes On</label>
+                <input asp-for="CloseDate" type="date" class="form-control" />
+                <span asp-validation-for="CloseDate" class="text-danger"></span>
+            </div>
+            <div class="col-md-3 mb-3">
+                <label asp-for="CloseTime" class="form-label">Closes At</label>
+                <input asp-for="CloseTime" type="time" class="form-control" />
+                <span asp-validation-for="CloseTime" class="text-danger"></span>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label asp-for="DurationMinutes" class="form-label">Duration (minutes)</label>
+                <input asp-for="DurationMinutes" type="number" class="form-control" min="1" max="300" />
+                <span asp-validation-for="DurationMinutes" class="text-danger"></span>
+            </div>
+            <div class="col-md-6 mb-3">
+                <label asp-for="MaxAttempts" class="form-label">Max Attempts</label>
+                <input asp-for="MaxAttempts" type="number" class="form-control" min="1" max="10" />
+                <span asp-validation-for="MaxAttempts" class="text-danger"></span>
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label d-block">Audience</label>
+
+            <div class="form-check">
+                <input class="form-check-input audience-radio" type="radio" name="AudienceType"
+                       id="audienceAll" value="@((int)QuizzTypes.AllEnrolledInSubject)"
+                       checked="@(Model.AudienceType == QuizzTypes.AllEnrolledInSubject ? "checked" : null)" />
+                <label class="form-check-label" for="audienceAll">All students enrolled in this subject</label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input audience-radio" type="radio" name="AudienceType"
+                       id="audienceOffering" value="@((int)QuizzTypes.SpecificOffering)"
+                       checked="@(Model.AudienceType == QuizzTypes.SpecificOffering ? "checked" : null)" />
+                <label class="form-check-label" for="audienceOffering">A specific Offering</label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input audience-radio" type="radio" name="AudienceType"
+                       id="audienceLearners" value="@((int)QuizzTypes.SpecificLearners)"
+                       checked="@(Model.AudienceType == QuizzTypes.SpecificLearners ? "checked" : null)" />
+                <label class="form-check-label" for="audienceLearners">Specific learners</label>
+            </div>
+        </div>
+
+        <div class="mb-3 audience-section" id="offeringSection" style="display:none;">
+            <label asp-for="OfferingId" class="form-label">Offering</label>
+            <select asp-for="OfferingId" class="form-select" id="offeringSelect">
+                <option value="">-- Select offering --</option>
+                @foreach (var o in offerings)
+                {
+                    <option value="@o.OfferingId" data-subject-id="@o.SubjectId" selected="@(o.OfferingId == Model.OfferingId ? "selected" : null)">
+                        @o.SubjectName — Grade @o.Grade — @o.Type
+                    </option>
+                }
+            </select>
+            <span asp-validation-for="OfferingId" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3 audience-section" id="learnersSection" style="display:none;">
+            <label class="form-label">Learners</label>
+            <div class="form-text mb-2">Learners already assigned to this quiz are locked in and can't be unchecked — you can only add more.</div>
+            <div id="learnerCheckboxList" class="border rounded p-2" style="max-height: 250px; overflow-y: auto;">
+                @foreach (var l in learners)
+                {
+                    var isExisting = Model.ExistingLearnerUserIds.Contains((int)l.LearnerUserId);
+                    <div class="form-check learner-option" data-subject-id="@l.SubjectId" style="display:none;">
+                        <input class="form-check-input" type="checkbox" name="SelectedLearnerUserIds" value="@l.LearnerUserId"
+                               id="learner_@l.LearnerUserId"
+                               checked="@(isExisting ? "checked" : null)"
+                               disabled="@(isExisting ? "disabled" : null)" />
+                        @if (isExisting)
+                        {
+                            <input type="hidden" name="SelectedLearnerUserIds" value="@l.LearnerUserId" />
+                        }
+                        <label class="form-check-label" for="learner_@l.LearnerUserId">
+                            @l.FullName @(isExisting ? "(already assigned)" : "")
+                        </label>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Save Changes</button>
+        <a asp-controller="Quiz" asp-action="Index" class="btn btn-secondary">Cancel</a>
+    </form>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script>
+        const materialSelect = document.getElementById('materialSelect');
+        const offeringSelect = document.getElementById('offeringSelect');
+        const offeringSection = document.getElementById('offeringSection');
+        const learnersSection = document.getElementById('learnersSection');
+        const audienceRadios = document.querySelectorAll('.audience-radio');
+
+        function getSelectedSubjectId() {
+            const selectedOption = materialSelect.options[materialSelect.selectedIndex];
+            return selectedOption ? selectedOption.getAttribute('data-subject-id') : null;
+        }
+
+        function filterOfferingsAndLearners() {
+            const subjectId = getSelectedSubjectId();
+
+            Array.from(offeringSelect.options).forEach(opt => {
+                if (opt.value === '') return;
+                const matches = opt.getAttribute('data-subject-id') === subjectId;
+                opt.hidden = !matches;
+            });
+
+            document.querySelectorAll('.learner-option').forEach(el => {
+                const matches = el.getAttribute('data-subject-id') === subjectId;
+                el.style.display = matches ? '' : 'none';
+                // Note: existing (disabled/locked) learners are never auto-unchecked here,
+                // since their hidden input keeps them submitted regardless of visibility.
+            });
+        }
+
+        function updateAudienceSections() {
+            const selected = document.querySelector('.audience-radio:checked').value;
+            const allValue = '@((int)QuizzTypes.AllEnrolledInSubject)';
+            const offeringValue = '@((int)QuizzTypes.SpecificOffering)';
+            const learnersValue = '@((int)QuizzTypes.SpecificLearners)';
+
+            offeringSection.style.display = selected === offeringValue ? '' : 'none';
+            learnersSection.style.display = selected === learnersValue ? '' : 'none';
+        }
+
+        materialSelect.addEventListener('change', filterOfferingsAndLearners);
+        audienceRadios.forEach(r => r.addEventListener('change', updateAudienceSections));
+
+        filterOfferingsAndLearners();
+        updateAudienceSections();
+    </script>
+}

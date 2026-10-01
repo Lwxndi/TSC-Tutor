@@ -1,0 +1,43 @@
+﻿@model List<Tutor_Manager.Models.Enrollment>
+@{
+    var offering = (Tutor_Manager.Models.Offering)ViewBag.Offering;
+    ViewData["Title"] = "Class Roster";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h2 class="mb-0">@offering.Subject.SubjectName — Grade @offering.Grade</h2>
+            <small class="text-muted">@offering.Type · @offering.DeliveryMethod</small>
+        </div>
+        <a asp-controller="TutorEnrollment" asp-action="Index" class="btn btn-secondary">Back to My Classes</a>
+    </div>
+
+    @* Spec §27 — view-only: name and delivery mode only. No status history, no
+       payment info, no action buttons. Only Active enrollments are ever passed in
+       by GetActiveRosterForOfferingAsync, so there's nothing to filter here. *@
+    @if (!Model.Any())
+    {
+        <p class="text-muted">No learners are currently active in this offering.</p>
+    }
+    else
+    {
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Learner</th>
+                    <th>Delivery Mode</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var enrollment in Model)
+                {
+                    <tr>
+                        <td>@enrollment.Learner.User.FirstName @enrollment.Learner.User.LastName</td>
+                        <td><span class="badge bg-light text-dark border">@enrollment.DeliveryMode</span></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</div>

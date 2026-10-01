@@ -1,0 +1,17 @@
+﻿@model Tutor_Manager.ViewModels.EnrolmentViewModels.CancelEnrolmentViewModel
+@{
+    ViewData["Title"] = "Cancel Enrolment";
+}
+
+<h2>Cancel Enrolment</h2>
+<p class="text-muted">This will mark the enrolment as cancelled and record the reason below.</p>
+
+<form asp-action="Cancel" method="post">
+    <input type="hidden" asp-for="EnrolmentId" />
+    <div class="mb-3">
+        <label class="form-label">Reason</label>
+        <textarea asp-for="Reason" class="form-control" rows="3" required></textarea>
+    </div>
+    <button type="submit" class="btn btn-danger">Confirm Cancellation</button>
+    <a asp-action="Index" class="btn btn-secondary">Back</a>
+</form>

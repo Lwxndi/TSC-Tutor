@@ -1,0 +1,58 @@
+﻿@model List<Tutor_Manager.ViewModels.QuizzViewmodels.AvailableQuizViewModel>
+
+@{
+    ViewData["Title"] = "Available Quizzes";
+}
+
+<div class="container mt-4">
+    <h2>Available Quizzes</h2>
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+    }
+
+    @if (!Model.Any())
+    {
+        <p class="text-muted">No quizzes are currently available to you.</p>
+    }
+    else
+    {
+        <div class="list-group">
+            @foreach (var quiz in Model)
+            {
+                <div class="list-group-item">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>@quiz.Title</strong>
+                            <div class="text-muted small">@quiz.StudyMaterialTitle</div>
+                            <div class="text-muted small">
+                                Closes @quiz.CloseAt.ToLocalTime().ToString("dd MMM yyyy, HH:mm")
+                                · @quiz.DurationMinutes min
+                                · Attempts: @quiz.SubmittedAttemptCount / @quiz.MaxAttempts
+                            </div>
+                        </div>
+                        <div>
+                            @if (quiz.HasInProgressAttempt)
+                            {
+                                <a asp-controller="StudentQuiz" asp-action="Take" asp-route-attemptId="@quiz.InProgressAttemptId" class="btn btn-warning">Resume</a>
+                            }
+                            else if (quiz.SubmittedAttemptCount >= quiz.MaxAttempts)
+                            {
+                                <span class="badge bg-secondary">No attempts left</span>
+                            }
+                            else
+                            {
+                                <form asp-controller="StudentQuiz" asp-action="Start" method="post">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="quizId" value="@quiz.QuizId" />
+                                    <button type="submit" class="btn btn-primary">Start</button>
+                                </form>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>

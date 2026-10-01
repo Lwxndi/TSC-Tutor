@@ -1,0 +1,302 @@
+﻿@model Tutor_Manager.Models.Enrollment
+@using Microsoft.AspNetCore.Mvc.Rendering
+@using Tutor_Manager.Models.Enums
+
+@{
+    ViewData["Title"] = "Enrollment Details";
+    var offerings = (List<SelectListItem>)ViewBag.AvailableOfferings;
+    var warnings = ViewBag.Warnings as List<string> ?? new List<string>();
+    object occupancyObj = ViewBag.Occupancy;
+    var occupancy = occupancyObj != null
+        ? ((int Taken, int Capacity))occupancyObj
+        : (Taken: 0, Capacity: 0);
+}
+
+<div class="container mt-4">
+    <h2>Enrollment #@Model.EnrollmentId</h2>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+    }
+    @if (TempData["WarningMessages"] != null)
+    {
+        <div class="alert alert-warning">@TempData["WarningMessages"]</div>
+    }
+
+    @* NEW — warn-don't-block info surfaced before Admin decides (spec §11.1-11.3, §9, §10.8) *@
+    @if (warnings.Any())
+    {
+        <div class="alert alert-warning">
+            <strong>Please review before deciding:</strong>
+            <ul class="mb-0">
+                @foreach (var w in warnings)
+                {
+                    <li>@w</li>
+                }
+            </ul>
+        </div>
+    }
+
+    @* NEW — how full the current Offering is (spec §25.12) *@
+    <div class="mb-3">
+        <span class="badge @(occupancy.Taken >= occupancy.Capacity ? "bg-danger" : "bg-light text-dark border")">
+            Offering occupancy: @occupancy.Taken / @occupancy.Capacity
+        </span>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-body">
+            <dl class="row mb-0">
+                <dt class="col-sm-3">Learner</dt>
+                <dd class="col-sm-9">@Model.Learner.User.FirstName @Model.Learner.User.LastName</dd>
+
+                <dt class="col-sm-3">Current Offering</dt>
+                <dd class="col-sm-9">@Model.Offering.Subject.SubjectName — Grade @Model.Offering.Grade (@Model.Offering.DeliveryMethod)</dd>
+
+                <dt class="col-sm-3">Status</dt>
+                <dd class="col-sm-9"><span class="badge bg-secondary">@Model.Status</span></dd>
+
+                <dt class="col-sm-3">Delivery Mode</dt>
+                <dd class="col-sm-9">@Model.DeliveryMode</dd>
+
+                <dt class="col-sm-3">Initiated By</dt>
+                <dd class="col-sm-9">@Model.InitiatedByType</dd>
+
+                <dt class="col-sm-3">Requested At</dt>
+                <dd class="col-sm-9">@Model.RequestedAt.ToLocalTime().ToString("dd MMM yyyy, HH:mm")</dd>
+
+                @if (Model.RequestedOfferingId != null && Model.RequestedOffering != null)
+                {
+                    <dt class="col-sm-3">Guardian Requested Change To</dt>
+                    <dd class="col-sm-9">@Model.RequestedOffering.Subject.SubjectName — Grade @Model.RequestedOffering.Grade</dd>
+                }
+
+                @if (Model.WithdrawalRequestedAt != null)
+                {
+                    <dt class="col-sm-3">Guardian Requested Withdrawal</dt>
+                    <dd class="col-sm-9">@Model.WithdrawalRequestedReason (@Model.WithdrawalRequestedAt.Value.ToLocalTime().ToString("dd MMM yyyy"))</dd>
+                }
+
+                @if (Model.Status == EnrollmentStatus.Rejected)
+                {
+                    <dt class="col-sm-3">Rejection Reason</dt>
+                    <dd class="col-sm-9">@Model.RejectionReasonCode — @Model.RejectionReasonNote</dd>
+                }
+
+                @if (Model.Status == EnrollmentStatus.Withdrawn)
+                {
+                    <dt class="col-sm-3">Withdrawal Reason</dt>
+                    <dd class="col-sm-9">@Model.WithdrawalReasonCode — @Model.WithdrawalReasonNote</dd>
+                }
+
+                <dt class="col-sm-3">Redirect Count</dt>
+                <dd class="col-sm-9">@Model.RedirectCount</dd>
+            </dl>
+        </div>
+    </div>
+
+    @if (Model.RedirectHistory.Any())
+    {
+        <div class="card mb-3">
+            <div class="card-header">Redirect History</div>
+            <ul class="list-group list-group-flush">
+                @foreach (var h in Model.RedirectHistory.OrderByDescending(h => h.RedirectedAt))
+                {
+                    <li class="list-group-item">
+                        @h.RedirectedAt.ToLocalTime().ToString("dd MMM yyyy") —
+                        Offering #@h.PreviousOfferingId → #@h.NewOfferingId
+                        (@h.InitiatedByType) @(string.IsNullOrEmpty(h.Reason) ? "" : $"— {h.Reason}")
+                    </li>
+                }
+            </ul>
+        </div>
+    }
+
+    <div class="d-flex flex-wrap gap-2 mb-4">
+        @if (Model.Status == EnrollmentStatus.Pending)
+        {
+            <form asp-action="Confirm" asp-route-id="@Model.EnrollmentId" method="post" class="d-inline">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="btn btn-success">Confirm → Active</button>
+            </form>
+            <form asp-action="Waitlist" asp-route-id="@Model.EnrollmentId" method="post" class="d-inline">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="btn btn-warning">Waitlist</button>
+            </form>
+        }
+
+        @if (Model.Status == EnrollmentStatus.Waitlisted)
+        {
+            <form asp-action="Confirm" asp-route-id="@Model.EnrollmentId" method="post" class="d-inline">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="btn btn-success">Confirm → Active</button>
+            </form>
+        }
+
+        @if (Model.Status == EnrollmentStatus.Pending || Model.Status == EnrollmentStatus.Waitlisted)
+        {
+            <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#rejectModal">Reject</button>
+        }
+
+        @if (Model.Status == EnrollmentStatus.Rejected && Model.RejectionReasonCode != RejectionReasonCode.GuardianCancelled)
+        {
+            <form asp-action="Reconsider" asp-route-id="@Model.EnrollmentId" method="post" class="d-inline">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="btn btn-outline-secondary">Reconsider → Pending</button>
+            </form>
+        }
+
+        @if (Model.Status == EnrollmentStatus.Active || Model.Status == EnrollmentStatus.Suspended)
+        {
+            <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#withdrawModal">Withdraw</button>
+        }
+
+        @if (Model.Status == EnrollmentStatus.Pending || Model.Status == EnrollmentStatus.Waitlisted || Model.Status == EnrollmentStatus.Active)
+        {
+            <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#redirectModal">Redirect to Different Offering</button>
+        }
+    </div>
+
+    @if (Model.RequestedOfferingId != null)
+    {
+        <div class="card mb-4 border-primary">
+            <div class="card-body">
+                <p class="mb-2">Guardian has requested a change to <strong>@Model.RequestedOffering?.Subject.SubjectName — Grade @Model.RequestedOffering?.Grade</strong>.</p>
+                <p class="text-muted small">This learner has been redirected @Model.RedirectCount time(s) before.</p>
+                <form asp-action="ApproveRequestedChange" asp-route-id="@Model.EnrollmentId" method="post" class="d-inline">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-success">Approve Change</button>
+                </form>
+                <form asp-action="DenyRequestedChange" asp-route-id="@Model.EnrollmentId" method="post" class="d-inline">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-outline-secondary">Deny Change</button>
+                </form>
+            </div>
+        </div>
+    }
+
+    @* NEW — mirrors the RequestedOfferingId approve/deny block above. Previously the only
+       action available for a withdrawal request was the generic Withdraw modal, with no
+       explicit way to deny the request and leave the enrollment untouched. *@
+    @if (Model.WithdrawalRequestedAt != null)
+    {
+        <div class="card mb-4 border-danger">
+            <div class="card-body">
+                <p class="mb-2">Guardian has requested a withdrawal: <strong>@Model.WithdrawalRequestedReason</strong></p>
+                <p class="text-muted small">Requested @Model.WithdrawalRequestedAt.Value.ToLocalTime().ToString("dd MMM yyyy")</p>
+                <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#withdrawModal">Approve — Withdraw Learner</button>
+                <form asp-action="DenyWithdrawalRequest" asp-route-id="@Model.EnrollmentId" method="post" class="d-inline">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-outline-secondary">Deny Request</button>
+                </form>
+            </div>
+        </div>
+    }
+
+    <a asp-controller="AdminEnrollment" asp-action="Index" class="btn btn-secondary">Back to List</a>
+</div>
+
+<!-- Reject Modal -->
+<div class="modal fade" id="rejectModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form asp-action="Reject" asp-route-id="@Model.EnrollmentId" method="post">
+                @Html.AntiForgeryToken()
+                <div class="modal-header">
+                    <h5 class="modal-title">Reject Enrollment</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Reason</label>
+                        <select name="reasonCode" class="form-select">
+                            <option value="@RejectionReasonCode.AdminRejected_GradeMismatch">Grade Mismatch</option>
+                            <option value="@RejectionReasonCode.AdminRejected_Other">Other</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Note</label>
+                        <textarea name="note" class="form-control" rows="3"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger">Reject</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Withdraw Modal -->
+<div class="modal fade" id="withdrawModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form asp-action="Withdraw" asp-route-id="@Model.EnrollmentId" method="post">
+                @Html.AntiForgeryToken()
+                <div class="modal-header">
+                    <h5 class="modal-title">Withdraw Learner</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Reason</label>
+                        <select name="reasonCode" class="form-select">
+                            <option value="@WithdrawalReasonCode.AdminWithdrawn_GuardianRequested">Guardian Requested</option>
+                            <option value="@WithdrawalReasonCode.AdminWithdrawn_NonPayment">Non-Payment</option>
+                            <option value="@WithdrawalReasonCode.AdminWithdrawn_Other">Other</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Note</label>
+                        <textarea name="note" class="form-control" rows="3">@Model.WithdrawalRequestedReason</textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger">Withdraw</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Redirect Modal -->
+<div class="modal fade" id="redirectModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form asp-action="Redirect" asp-route-id="@Model.EnrollmentId" method="post">
+                @Html.AntiForgeryToken()
+                <div class="modal-header">
+                    <h5 class="modal-title">Redirect to Different Offering</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">New Offering</label>
+                        <select name="newOfferingId" class="form-select" required>
+                            <option value="">-- Select an offering --</option>
+                            @foreach (var o in offerings)
+                            {
+                                <option value="@o.Value">@o.Text</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Reason (optional)</label>
+                        <textarea name="reason" class="form-control" rows="2"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Redirect</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

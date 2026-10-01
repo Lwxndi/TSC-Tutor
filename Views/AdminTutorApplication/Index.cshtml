@@ -9,11 +9,11 @@
 
     <div class="mb-3">
         <div class="btn-group" role="group">
-            <a asp-action="Index" class="btn btn-sm @(Model.StatusFilter == null ? "btn-primary" : "btn-outline-primary")">All</a>
-            <a asp-action="Index" asp-route-status="Pending" class="btn btn-sm @(Model.StatusFilter?.ToString() == "Pending" ? "btn-primary" : "btn-outline-primary")">Pending</a>
-            <a asp-action="Index" asp-route-status="ChangesRequired" class="btn btn-sm @(Model.StatusFilter?.ToString() == "ChangesRequired" ? "btn-primary" : "btn-outline-primary")">Changes Required</a>
-            <a asp-action="Index" asp-route-status="Approved" class="btn btn-sm @(Model.StatusFilter?.ToString() == "Approved" ? "btn-primary" : "btn-outline-primary")">Approved</a>
-            <a asp-action="Index" asp-route-status="Rejected" class="btn btn-sm @(Model.StatusFilter?.ToString() == "Rejected" ? "btn-primary" : "btn-outline-primary")">Rejected</a>
+            <a asp-action="Index" class="btn btn-sm @(Model.StatusFilter == null ? "btn-primary" : "btn-outline-secondary")">All</a>
+            <a asp-action="Index" asp-route-status="Pending" class="btn btn-sm @(Model.StatusFilter?.ToString() == "Pending" ? "btn-primary" : "btn-outline-secondary")">Pending</a>
+            <a asp-action="Index" asp-route-status="ChangesRequired" class="btn btn-sm @(Model.StatusFilter?.ToString() == "ChangesRequired" ? "btn-primary" : "btn-outline-secondary")">Changes Required</a>
+            <a asp-action="Index" asp-route-status="Approved" class="btn btn-sm @(Model.StatusFilter?.ToString() == "Approved" ? "btn-primary" : "btn-outline-secondary")">Approved</a>
+            <a asp-action="Index" asp-route-status="Rejected" class="btn btn-sm @(Model.StatusFilter?.ToString() == "Rejected" ? "btn-primary" : "btn-outline-secondary")">Rejected</a>
         </div>
     </div>
 
@@ -38,11 +38,11 @@
             <tbody>
                 @foreach (var app in Model.Applications)
                 {
+                    // Approved = brown (good outcome), Rejected = red (bad outcome),
+                    // Pending / Changes Required = grey (still in progress, no verdict yet)
                     var badgeClass = app.Status.ToString() switch
                     {
-                        "Pending" => "text-bg-warning",
-                        "ChangesRequired" => "text-bg-info",
-                        "Approved" => "text-bg-success",
+                        "Approved" => "text-bg-primary",
                         "Rejected" => "text-bg-danger",
                         _ => "text-bg-secondary"
                     };
@@ -55,7 +55,7 @@
                         <td><span class="badge @badgeClass">@app.Status</span></td>
                         <td>@(app.DateApplied?.ToString("dd MMM yyyy") ?? "—")</td>
                         <td>
-                            <a asp-action="Details" asp-route-id="@app.ApplicationId" class="btn btn-sm btn-outline-primary">View</a>
+                            <a asp-action="Details" asp-route-id="@app.ApplicationId" class="btn btn-sm btn-outline-secondary">View</a>
                         </td>
                     </tr>
                 }

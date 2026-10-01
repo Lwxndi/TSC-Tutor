@@ -1,0 +1,180 @@
+﻿@model Tutor_Manager.ViewModels.AdminPaymentsIndexViewModel
+@using Tutor_Manager.Models.Enums
+@using Tutor_Manager.ViewModels
+
+@{
+    ViewData["Title"] = "Fees / Invoices";
+    var needsReview = Model.Payments.Count(p => p.Status == PaymentStatus.NeedsReview || !string.IsNullOrWhiteSpace(p.ReviewNote));
+}
+
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="mb-0">Fees / Invoices</h2>
+        @* Manual trigger — no scheduler exists yet. Unpaid earlier balances are carried forward. *@
+        <form asp-action="GenerateDueRecurring" method="post" class="m-0">
+            @Html.AntiForgeryToken()
+            <button type="submit" class="btn btn-primary">Generate Due Recurring Invoices</button>
+        </form>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+    }
+    @if (needsReview > 0)
+    {
+        <div class="alert alert-warning">
+            <i class="bi bi-exclamation-triangle me-1"></i>
+            <strong>@needsReview</strong> payment(s) need your attention. Look for the red <span class="badge bg-danger">Review</span> flag below.
+        </div>
+    }
+
+    <ul class="nav nav-tabs mb-3" role="tablist">
+        <li class="nav-item">
+            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-payments" type="button">
+                Payments <span class="badge bg-secondary">@Model.Payments.Count</span>
+            </button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-invoices" type="button">
+                Invoices <span class="badge bg-secondary">@Model.Invoices.Count</span>
+            </button>
+        </li>
+    </ul>
+
+    <div class="tab-content">
+
+        @* ===================== PAYMENTS ===================== *@
+        <div class="tab-pane fade show active" id="tab-payments">
+            <form method="get" class="row g-2 mb-3">
+                <div class="col-md-5">
+                    <input type="text" name="search" value="@Model.Search" class="form-control"
+                           placeholder="Search guardian, learner, email, payment ID or Stripe reference" />
+                </div>
+                <div class="col-auto">
+                    <button type="submit" class="btn btn-outline-primary">Search</button>
+                    @if (!string.IsNullOrWhiteSpace(Model.Search))
+                    {
+                        <a asp-action="Index" class="btn btn-link">Clear</a>
+                    }
+                </div>
+            </form>
+
+            @if (!Model.Payments.Any())
+            {
+                <p class="text-muted">No payments found.</p>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-striped align-middle">
+                        <thead>
+                            <tr>
+                                <th>Receipt</th>
+                                <th>Started</th>
+                                <th>Paid</th>
+                                <th>Guardian</th>
+                                <th>Learner(s)</th>
+                                <th class="text-end">Amount</th>
+                                <th>Status</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var p in Model.Payments)
+                            {
+                                var allLines = p.PaymentInvoices.SelectMany(pi => pi.Invoice.LineItems);
+                                <tr>
+                                    <td>@PaymentViewHelpers.ReceiptRef(p)</td>
+                                    <td>@PaymentViewHelpers.When(p.CreatedAt)</td>
+                                    <td>@PaymentViewHelpers.When(p.PaidAt)</td>
+                                    <td>@p.Guardian.User.FirstName @p.Guardian.User.LastName</td>
+                                    <td>@PaymentViewHelpers.Learners(allLines)</td>
+                                    <td class="text-end">R@(p.Amount.ToString("N2"))</td>
+                                    <td>
+                                        <partial name="_PaymentStatusBadge" model="p.Status" />
+                                        @if (!string.IsNullOrWhiteSpace(p.ReviewNote) && p.Status != PaymentStatus.NeedsReview)
+                                        {
+                                            <span class="badge bg-danger" title="@p.ReviewNote">Review</span>
+                                        }
+                                    </td>
+                                    <td class="text-end">
+                                        <a asp-action="Payment" asp-route-paymentId="@p.PaymentId" class="btn btn-sm btn-outline-secondary">View</a>
+                                        @if (p.Status == PaymentStatus.Paid)
+                                        {
+                                            <a asp-action="DownloadReceipt" asp-route-paymentId="@p.PaymentId" class="btn btn-sm btn-outline-primary">
+                                                <i class="bi bi-download"></i>
+                                            </a>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+
+        @* ===================== INVOICES ===================== *@
+        <div class="tab-pane fade" id="tab-invoices">
+            @if (!Model.Invoices.Any())
+            {
+                <p class="text-muted">No invoices yet.</p>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-striped align-middle">
+                        <thead>
+                            <tr>
+                                <th>Invoice</th>
+                                <th>Guardian</th>
+                                <th>Learner(s)</th>
+                                <th class="text-end">Total</th>
+                                <th class="text-end">Paid</th>
+                                <th>Status</th>
+                                <th>Created</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var invoice in Model.Invoices)
+                            {
+                                <tr>
+                                    <td>@PaymentViewHelpers.InvoiceRef(invoice)</td>
+                                    <td>@invoice.Guardian.User.FirstName @invoice.Guardian.User.LastName</td>
+                                    <td>
+                                        @foreach (var li in invoice.LineItems)
+                                        {
+                                            <div>
+                                                @PaymentViewHelpers.LearnerName(li) — @PaymentViewHelpers.Describe(li)
+                                                @if (li.IsCarriedForward)
+                                                {
+                                                    <span class="badge bg-info text-dark">Carried forward</span>
+                                                }
+                                                <span class="text-muted small">(@PaymentViewHelpers.Month(li))</span>
+                                            </div>
+                                        }
+                                    </td>
+                                    <td class="text-end">R@(invoice.TotalAmountDue.ToString("N2"))</td>
+                                    <td class="text-end">R@(invoice.TotalAmountPaidSoFar.ToString("N2"))</td>
+                                    <td>
+                                        <partial name="_InvoiceStatusBadge" model="invoice.Status" />
+                                        @if (invoice.Status == InvoiceStatus.Voided && !string.IsNullOrWhiteSpace(invoice.VoidReason))
+                                        {
+                                            <div class="text-muted small">@invoice.VoidReason</div>
+                                        }
+                                    </td>
+                                    <td>@invoice.CreatedAt.ToLocalTime().ToString("dd MMM yyyy, HH:mm")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+</div>

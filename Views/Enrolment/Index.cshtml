@@ -1,0 +1,80 @@
+﻿@* @model List<Tutor_Manager.ViewModels.EnrolmentListItemViewModel>
+@using Tutor_Manager.Models.Enums
+@{
+    ViewData["Title"] = "Enrolments";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>Enrolments</h2>
+    <a asp-action="Enroll" class="btn btn-primary">Enroll a Learner</a>
+</div>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success">@TempData["Success"]</div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">@TempData["Error"]</div>
+}
+
+@if (!Model.Any())
+{
+    <p class="text-muted">No enrolments yet.</p>
+}
+else
+{
+    <table class="table table-hover align-middle">
+        <thead>
+            <tr>
+                <th>Learner</th>
+                <th>Subject</th>
+                <th>Grade</th>
+                <th>Tutor</th>
+                <th>Start Date</th>
+                <th>Price</th>
+                <th>Status</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var e in Model)
+            {
+                <tr>
+                    <td>@e.LearnerName</td>
+                    <td>@e.SubjectName</td>
+                    <td>Grade @((int)e.Grade)</td>
+                    <td>@e.TutorName</td>
+                    <td>@e.StartDate.ToString("dd MMM yyyy")</td>
+                    <td>R@(e.Price.ToString("N2"))</td>
+                    <td>
+                        @switch (e.Status)
+                        {
+                            case EnrolmentStatus.Active:
+                                <span class="badge bg-success">Active</span>
+                                break;
+                            case EnrolmentStatus.Pending:
+                                <span class="badge bg-warning text-dark">Pending</span>
+                                break;
+                            case EnrolmentStatus.Paused:
+                                <span class="badge bg-secondary">Paused</span>
+                                break;
+                            case EnrolmentStatus.Completed:
+                                <span class="badge bg-primary">Completed</span>
+                                break;
+                            case EnrolmentStatus.Cancelled:
+                                <span class="badge bg-danger">Cancelled</span>
+                                break;
+                        }
+                    </td>
+                    <td class="text-end">
+                        @if (e.Status == EnrolmentStatus.Active || e.Status == EnrolmentStatus.Pending)
+                        {
+                            <a asp-action="Cancel" asp-route-id="@e.EnrolmentId" class="btn btn-sm btn-outline-danger">Cancel</a>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+} *@

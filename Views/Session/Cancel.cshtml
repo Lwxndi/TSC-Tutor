@@ -1,0 +1,22 @@
+﻿@model Tutor_Manager.ViewModels.CancelSessionViewModel
+@{
+    ViewData["Title"] = "Cancel Session";
+}
+
+<h2>Cancel Session</h2>
+<p class="text-muted">This session will be marked as cancelled and kept in history — it will not be deleted.</p>
+
+<div asp-validation-summary="All" class="text-danger"></div>
+
+<form asp-action="Cancel" method="post">
+    <input type="hidden" asp-for="SessionId" />
+
+    <div class="mb-3">
+        <label asp-for="Reason" class="form-label">Reason for cancellation</label>
+        <input asp-for="Reason" class="form-control" placeholder="e.g. Tutor unavailable" />
+        <span asp-validation-for="Reason" class="text-danger"></span>
+    </div>
+
+    <button type="submit" class="btn btn-danger">Cancel Session</button>
+    <a asp-action="Details" asp-route-id="@Model.SessionId" class="btn btn-secondary">Back</a>
+</form>

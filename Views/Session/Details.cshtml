@@ -1,0 +1,64 @@
+﻿@model Tutor_Manager.ViewModels.SessionDetailViewModel
+@using Tutor_Manager.Models.Enums
+@{
+    ViewData["Title"] = "Session Details";
+}
+
+<h2>@Model.SubjectName — Grade @((int)Model.Grade)</h2>
+<p class="text-muted">@Model.Date.ToString("dddd, d MMMM yyyy") — @Model.StartTime.ToString(@"hh\:mm") to @Model.EndTime.ToString(@"hh\:mm")</p>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success">@TempData["Success"]</div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">@TempData["Error"]</div>
+}
+
+<dl class="row">
+    <dt class="col-sm-2">Tutor</dt>
+    <dd class="col-sm-10">
+        @Model.TutorName
+        @if (Model.IsSubstitute)
+        {
+            <span class="badge bg-warning text-dark ms-1">Substitute</span>
+        }
+    </dd>
+
+    <dt class="col-sm-2">Delivery</dt>
+    <dd class="col-sm-10">@Model.DeliveryMethod</dd>
+
+    @if (!string.IsNullOrEmpty(Model.JitsiLink))
+    {
+        <dt class="col-sm-2">Jitsi</dt>
+        <dd class="col-sm-10"><a href="@Model.JitsiLink" target="_blank">Join Meeting</a></dd>
+    }
+
+    <dt class="col-sm-2">Status</dt>
+    <dd class="col-sm-10">
+        @switch (Model.Status)
+        {
+            case SessionStatus.Scheduled:
+                <span class="badge bg-primary">Scheduled</span>
+                break;
+            case SessionStatus.Cancelled:
+                <span class="badge bg-danger">Cancelled</span>
+                break;
+            case SessionStatus.Completed:
+                <span class="badge bg-success">Completed</span>
+                break;
+        }
+    </dd>
+</dl>
+
+@if (Model.Status == SessionStatus.Scheduled)
+{
+    <a asp-action="Reschedule" asp-route-id="@Model.SessionId" class="btn btn-outline-primary">Reschedule</a>
+    <a asp-action="Cancel" asp-route-id="@Model.SessionId" class="btn btn-outline-danger">Cancel Session</a>
+    <a asp-action="AssignSubstitute" asp-route-id="@Model.SessionId" class="btn btn-outline-secondary">
+        @(Model.IsSubstitute ? "Change Substitute" : "Assign Substitute")
+    </a>
+}
+
+<a asp-action="Index" class="btn btn-secondary">Back to Sessions</a>

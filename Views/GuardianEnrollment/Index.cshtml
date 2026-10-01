@@ -1,0 +1,161 @@
+﻿@model List<Tutor_Manager.Models.Enrollment>
+@using Microsoft.AspNetCore.Mvc.Rendering
+@using Tutor_Manager.Models.Enums
+
+@{
+    ViewData["Title"] = "My Learners' Enrollments";
+    var offerings = (List<SelectListItem>)ViewBag.AvailableOfferings;
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>My Learners' Enrollments</h2>
+        <a asp-controller="GuardianEnrollment" asp-action="Request" class="btn btn-primary">Request New Enrollment</a>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+    }
+
+    @if (!Model.Any())
+    {
+        <p class="text-muted">No enrollments yet. Use "Request New Enrollment" to get started.</p>
+    }
+    else
+    {
+        @foreach (var enrollment in Model)
+        {
+            <div class="card mb-3">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h5 class="card-title mb-1">
+                                @enrollment.Learner.User.FirstName @enrollment.Learner.User.LastName
+                                — @enrollment.Offering.Subject.SubjectName (Grade @enrollment.Offering.Grade)
+                            </h5>
+                            <span class="badge bg-secondary">@enrollment.Status</span>
+                            <span class="badge bg-light text-dark border">@enrollment.DeliveryMode</span>
+                        </div>
+                        <small class="text-muted">Requested @enrollment.RequestedAt.ToLocalTime().ToString("dd MMM yyyy")</small>
+                    </div>
+
+                    @if (enrollment.Status == EnrollmentStatus.Rejected)
+                    {
+                        @if (enrollment.RejectionReasonCode == RejectionReasonCode.GuardianCancelled)
+                        {
+                            <p class="text-muted mt-2 mb-0">You cancelled this request.</p>
+                        }
+                        else
+                        {
+                            <p class="text-danger mt-2 mb-0">Reason: @enrollment.RejectionReasonNote</p>
+                        }
+                    }
+
+                    @if (enrollment.RequestedOfferingId != null)
+                    {
+                        <p class="text-primary mt-2 mb-0">Change request pending admin review.</p>
+                    }
+
+                    @if (enrollment.WithdrawalRequestedAt != null && enrollment.Status != EnrollmentStatus.Withdrawn)
+                    {
+                        <p class="text-warning mt-2 mb-0">Withdrawal requested, awaiting admin action.</p>
+                    }
+
+                    @if (enrollment.Status == EnrollmentStatus.Pending || enrollment.Status == EnrollmentStatus.Waitlisted
+                        || enrollment.Status == EnrollmentStatus.Active)
+                    {
+                        <div class="mt-3 d-flex gap-2">
+                            @* NEW — spec §7.4: Guardian can cancel their own Pending/Waitlisted
+                               request outright, without waiting on Admin. *@
+                            @if (enrollment.Status == EnrollmentStatus.Pending || enrollment.Status == EnrollmentStatus.Waitlisted)
+                            {
+                                <form asp-action="CancelRequest" method="post" class="d-inline"
+                                      onsubmit="return confirm('Cancel this enrollment request?');">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="enrollmentId" value="@enrollment.EnrollmentId" />
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">Cancel Request</button>
+                                </form>
+                            }
+                            <button type="button" class="btn btn-sm btn-outline-primary"
+                                    data-bs-toggle="modal" data-bs-target="#changeModal-@enrollment.EnrollmentId">
+                                Request Offering Change
+                            </button>
+                            @if (enrollment.Status == EnrollmentStatus.Active && enrollment.WithdrawalRequestedAt == null)
+                            {
+                                <button type="button" class="btn btn-sm btn-outline-danger"
+                                        data-bs-toggle="modal" data-bs-target="#withdrawModal-@enrollment.EnrollmentId">
+                                    Request Withdrawal
+                                </button>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Change Request Modal -->
+            <div class="modal fade" id="changeModal-@enrollment.EnrollmentId" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <form asp-action="RequestChange" method="post">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="enrollmentId" value="@enrollment.EnrollmentId" />
+                            <div class="modal-header">
+                                <h5 class="modal-title">Request a Different Offering</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <label class="form-label">Requested Offering</label>
+                                @* CHANGED — was a raw <input type="number"> for the Offering ID.
+                                   Populated dropdown, same source as the Request page. *@
+                                <select name="requestedOfferingId" class="form-select" required>
+                                    <option value="">-- Select an offering --</option>
+                                    @foreach (var o in offerings)
+                                    {
+                                        @if (int.Parse(o.Value!) != enrollment.OfferingId)
+                                        {
+                                            <option value="@o.Value">@o.Text</option>
+                                        }
+                                    }
+                                </select>
+                                <div class="form-text">Admin will review before this takes effect.</div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                <button type="submit" class="btn btn-primary">Submit Request</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Withdrawal Request Modal -->
+            <div class="modal fade" id="withdrawModal-@enrollment.EnrollmentId" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <form asp-action="RequestWithdrawal" method="post">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="enrollmentId" value="@enrollment.EnrollmentId" />
+                            <div class="modal-header">
+                                <h5 class="modal-title">Request Withdrawal</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <label class="form-label">Reason</label>
+                                <textarea name="reason" class="form-control" rows="3" required></textarea>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                <button type="submit" class="btn btn-danger">Submit Request</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        }
+    }
+</div>

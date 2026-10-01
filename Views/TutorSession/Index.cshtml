@@ -1,0 +1,72 @@
+﻿@model Tutor_Manager.ViewModels.Sessions.TutorSessionBoardViewModel
+@{
+    ViewData["Title"] = "My Sessions";
+    var tab = (ViewBag.Tab as string ?? "today").ToLower();
+}
+
+<h2 class="mb-3">My Sessions</h2>
+
+@if (TempData["Error"] != null) { <div class="alert alert-danger">@TempData["Error"]</div> }
+@if (TempData["Success"] != null) { <div class="alert alert-success">@TempData["Success"]</div> }
+
+<ul class="nav nav-pills mb-3">
+    <li class="nav-item">
+        <button class="nav-link @(tab == "today" ? "active" : "")" data-bs-toggle="pill" data-bs-target="#tab-today" type="button">
+            Today <span class="badge bg-secondary">@Model.Today.Count</span>
+        </button>
+    </li>
+    <li class="nav-item">
+        <button class="nav-link @(tab == "upcoming" ? "active" : "")" data-bs-toggle="pill" data-bs-target="#tab-upcoming" type="button">
+            Upcoming <span class="badge bg-secondary">@Model.Upcoming.Count</span>
+        </button>
+    </li>
+    <li class="nav-item">
+        <button class="nav-link @(tab == "wrapup" ? "active" : "")" data-bs-toggle="pill" data-bs-target="#tab-wrapup" type="button">
+            Needs wrap-up
+            @if (Model.NeedsWrapUp.Any()) { <span class="badge bg-danger">@Model.NeedsWrapUp.Count</span> }
+        </button>
+    </li>
+</ul>
+
+<div class="tab-content">
+    <div class="tab-pane fade @(tab == "today" ? "show active" : "")" id="tab-today">
+        @if (!Model.Today.Any()) { <p class="text-muted">No sessions today.</p> }
+        @foreach (var s in Model.Today) { <partial name="_SessionCard" model="s" /> }
+    </div>
+    <div class="tab-pane fade @(tab == "upcoming" ? "show active" : "")" id="tab-upcoming">
+        @if (!Model.Upcoming.Any()) { <p class="text-muted">Nothing scheduled in the next 30 days.</p> }
+        @foreach (var s in Model.Upcoming) { <partial name="_SessionCard" model="s" /> }
+    </div>
+    <div class="tab-pane fade @(tab == "wrapup" ? "show active" : "")" id="tab-wrapup">
+        @if (!Model.NeedsWrapUp.Any()) { <p class="text-muted">You're all caught up.</p> }
+        @foreach (var s in Model.NeedsWrapUp) { <partial name="_SessionCard" model="s" /> }
+    </div>
+</div>
+
+<div class="modal fade" id="cancelModal" tabindex="-1">
+    <div class="modal-dialog">
+        <form asp-action="Cancel" method="post" class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Cancel session</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" name="sessionId" id="cancelSessionId" />
+                <label class="form-label">Reason (required)</label>
+                <textarea name="reason" class="form-control" rows="3" required maxlength="500"></textarea>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Keep session</button>
+                <button type="submit" class="btn btn-danger">Cancel session</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.getElementById('cancelModal').addEventListener('show.bs.modal', function (e) {
+            document.getElementById('cancelSessionId').value = e.relatedTarget.getAttribute('data-session-id');
+        });
+    </script>
+}

@@ -1,0 +1,54 @@
+﻿@model Tutor_Manager.ViewModels.TutorAssignment.TutorAssignmentIndexViewModel
+@{
+    ViewData["Title"] = "Tutor Assignment";
+}
+
+<h2>Tutor Assignment</h2>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success">@TempData["Success"]</div>
+}
+@if (TempData["Warning"] != null)
+{
+    <div class="alert alert-warning">@TempData["Warning"]</div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">@TempData["Error"]</div>
+}
+
+@if (Model.Unassigned.Any())
+{
+    <form asp-action="GenerateForAllUnassigned" method="post" class="mb-2"
+          onsubmit="return confirm('This will generate AI recommendations for @Model.Unassigned.Count tutor(s). This uses Gemini API calls. Continue?');">
+        <button type="submit" class="btn btn-outline-primary btn-sm">Generate for All Unassigned</button>
+    </form>
+}
+
+@foreach (var (title, list) in new[] {
+    ("Unassigned", Model.Unassigned), ("Assigned", Model.Assigned),
+    ("On Leave", Model.OnLeave), ("Inactive", Model.Inactive) })
+{
+    <h5 class="mt-4">@title (@list.Count)</h5>
+    @if (!list.Any())
+    {
+        <p class="text-muted">None.</p>
+    }
+    else
+    {
+        <table class="table table-sm">
+            <tbody>
+                @foreach (var t in list)
+                {
+                    <tr>
+                        <td>@t.FullName</td>
+                        <td>@(t.CurrentAssignments.Any() ? string.Join(", ", t.CurrentAssignments) : "—")</td>
+                        <td>@(t.HasRecommendation ? "AI recommendation available" : "")</td>
+                        <td><a asp-action="ManageTutor" asp-route-id="@t.TutorUserId" class="btn btn-sm btn-outline-primary">Manage</a></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+}

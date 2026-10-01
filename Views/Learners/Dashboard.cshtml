@@ -76,25 +76,39 @@
             </div>
         </div>
 
-        <div class="col-md-6">
-            <div class="card h-100">
-                <div class="card-header"><strong>Upcoming Sessions</strong></div>
-                <div class="card-body">
-                    @if (!Model.UpcomingSessions.Any())
+   <div class="col-md-6">
+    <div class="card h-100">
+        <div class="card-header"><strong>Upcoming Sessions</strong></div>
+        <div class="card-body">
+            @if (!Model.UpcomingSessions.Any())
+            {
+                <p class="text-muted mb-0">No sessions scheduled in the next 7 days.</p>
+            }
+            else
+            {
+                <ul class="list-unstyled mb-0">
+                    @foreach (var session in Model.UpcomingSessions)
                     {
-                        <p class="text-muted mb-0">Session scheduling isn't available yet — check back soon.</p>
-                    }
-                    else
-                    {
-                        <ul class="mb-0">
-                            @foreach (var session in Model.UpcomingSessions)
+                        <li class="mb-2">
+                            <strong>@session.Date.ToString("ddd dd MMM")</strong>
+                            @session.StartTime.ToString(@"hh\:mm")–@session.EndTime.ToString(@"hh\:mm")
+                            <br />
+                            <span class="text-muted">@session.SubjectName with @session.TutorName</span>
+                            @if (session.Status != Tutor_Manager.Models.Enums.SessionStatus.Scheduled)
                             {
-                                <li>@session</li>
+                                <span class="badge bg-secondary ms-1">@session.Status</span>
                             }
-                        </ul>
+                            @if (!string.IsNullOrEmpty(session.JitsiLink))
+                            {
+                                <br />
+                                <a href="@session.JitsiLink" target="_blank" class="small">Join session link</a>
+                            }
+                        </li>
                     }
-                </div>
-            </div>
+                </ul>
+            }
         </div>
+    </div>
+</div>
     </div>
 </div>
